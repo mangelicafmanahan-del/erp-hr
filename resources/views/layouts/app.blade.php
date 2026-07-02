@@ -35,10 +35,19 @@
                 Add Employee
             </a>
 
+            <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Payroll</div>
+            <a href="{{ route('payroll.dashboard') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('payroll.dashboard') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Payroll Dashboard
+            </a>
+            <a href="{{ route('payroll.runs.create') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('payroll.runs.create') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Run Payroll
+            </a>
+
             {{-- Not yet built - placeholders only, matching the reference UI's structure.
                  Building these out is future work, not part of this delivery. --}}
             <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Other Modules</div>
-            <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Payroll</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Recruitment</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Attendance &amp; Leave</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Reports</span>

@@ -22,15 +22,15 @@ class EmployeeController extends Controller
         $query = Employee::with('department');
 
         if ($search = $request->input('search')) {
-    $query->where(function ($q) use ($search) {
-        $like = "%{$search}%";
-        $q->where('first_name', 'like', $like)
-          ->orWhere('last_name', 'like', $like)
-          ->orWhere('employee_number', 'like', $like)
-          ->orWhere('email', 'like', $like)
-          ->orWhereRaw("(first_name || ' ' || last_name) LIKE ?", [$like]);
-    });
-}
+            $query->where(function ($q) use ($search) {
+                $like = "%{$search}%";
+                $q->where('first_name', 'like', $like)
+                  ->orWhere('last_name', 'like', $like)
+                  ->orWhere('employee_number', 'like', $like)
+                  ->orWhere('email', 'like', $like)
+                  ->orWhereRaw("(first_name || ' ' || last_name) LIKE ?", [$like]);
+            });
+        }
 
         if ($departmentId = $request->input('department_id')) {
             $query->where('department_id', $departmentId);
@@ -164,6 +164,51 @@ class EmployeeController extends Controller
 
         return redirect()->route('employees.show', $employee)->with('success', 'Document removed.');
     }
+
+    /**
+ * Lightweight JSON summary used by the Employee Directory slide-over panel.
+ */
+public function summary(Employee $employee)
+{
+    $employee->load([
+        'department',
+        'employmentHistory.department',
+        'documents',
+    ]);
+
+    return response()->json([
+        'id' => $employee->id,
+        'employee_number' => $employee->employee_number,
+        'full_name' => $employee->full_name,
+        'job_title' => $employee->job_title,
+        'department' => $employee->department?->name,
+        'employment_status' => $employee->employment_status,
+        'email' => $employee->email,
+        'phone_number' => $employee->phone_number,
+        'gender' => $employee->gender,
+        'date_of_birth' => optional($employee->date_of_birth)->format('M d, Y'),
+        'current_address' => $employee->current_address,
+
+        'employment_history' => $employee->employmentHistory->map(function ($history) {
+            return [
+                'position' => $history->position,
+                'company_name' => $history->company_name ?? 'This Company',
+                'start' => optional($history->start_date)->format('M Y'),
+                'end' => optional($history->end_date)->format('M Y') ?? 'Present',
+            ];
+        })->values(),
+
+        'documents' => $employee->documents->map(function ($document) {
+            return [
+                'document_type' => $document->document_type,
+                'file_name' => $document->file_name,
+                'url' => Storage::url($document->file_path),
+            ];
+        })->values(),
+
+        'profile_url' => route('employees.show', $employee),
+    ]);
+}
 
     // ----- Helpers -----
 

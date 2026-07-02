@@ -61,6 +61,59 @@
         </div>
     </div>
 
+    {{-- Salary & Payroll (Function 2) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="bg-white border rounded-lg p-6">
+            <h2 class="font-semibold text-gray-900 mb-1">Salary</h2>
+            <p class="text-xs text-gray-400 mb-4">Setting a new salary here doesn't overwrite history - it adds a new dated entry.</p>
+
+            @if ($employee->currentSalary)
+                <div class="text-sm mb-4 pb-4 border-b">
+                    <div class="text-gray-500">Current Basic Salary</div>
+                    <div class="text-xl font-bold text-gray-900">&#8369;{{ number_format($employee->currentSalary->basic_salary, 2) }}</div>
+                    <div class="text-gray-500 mt-1">Allowance: &#8369;{{ number_format($employee->currentSalary->allowance, 2) }}</div>
+                    <div class="text-xs text-gray-400 mt-1">Effective {{ $employee->currentSalary->effective_date->format('M d, Y') }}</div>
+                </div>
+            @else
+                <p class="text-sm text-amber-600 mb-4">No salary set yet - this employee will be skipped in payroll runs.</p>
+            @endif
+
+            <form action="{{ route('employees.salary.store', $employee) }}" method="POST" class="space-y-3">
+                @csrf
+                <div>
+                    <label class="text-xs text-gray-500">Basic Salary *</label>
+                    <input type="number" step="0.01" min="0" name="basic_salary" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">Allowance</label>
+                    <input type="number" step="0.01" min="0" name="allowance" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">Effective Date *</label>
+                    <input type="date" name="effective_date" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                    Save Salary
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white border rounded-lg p-6 lg:col-span-2">
+            <h2 class="font-semibold text-gray-900 mb-4">Payslip History</h2>
+            @forelse ($employee->payslips as $payslip)
+                <div class="flex justify-between items-center py-3 {{ !$loop->last ? 'border-b' : '' }}">
+                    <div>
+                        <div class="font-medium text-gray-800">{{ $payslip->payrollRun->period_start->format('M d') }} &ndash; {{ $payslip->payrollRun->period_end->format('M d, Y') }}</div>
+                        <div class="text-xs text-gray-400">Net Pay: &#8369;{{ number_format($payslip->net_pay, 2) }}</div>
+                    </div>
+                    <a href="{{ route('payroll.payslips.show', $payslip) }}" class="text-blue-600 text-sm">View Payslip</a>
+                </div>
+            @empty
+                <p class="text-sm text-gray-400">No payslips generated yet.</p>
+            @endforelse
+        </div>
+    </div>
+
     {{-- Documents (1c) --}}
     <div class="bg-white border rounded-lg p-6 mt-6">
         <h2 class="font-semibold text-gray-900 mb-4">Documents</h2>

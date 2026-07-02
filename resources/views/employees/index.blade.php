@@ -60,9 +60,10 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 text-gray-500">{{ $employee->employee_number }}</td>
                         <td class="px-4 py-3">
-                            <a href="{{ route('employees.show', $employee) }}" class="text-blue-600 font-medium">
+                            <button type="button" onclick="openEmployeePanel({{ $employee->id }})"
+                                    class="text-blue-600 font-medium hover:underline text-left">
                                 {{ $employee->full_name }}
-                            </a>
+                            </button>
                         </td>
                         <td class="px-4 py-3">{{ $employee->department?->name ?? '\u2014' }}</td>
                         <td class="px-4 py-3">{{ $employee->job_title ?? '\u2014' }}</td>
@@ -105,4 +106,100 @@
     <div class="mt-4">
         {{ $employees->links() }}
     </div>
+
+    {{-- Slide-over panel: employee quick summary --}}
+    <div id="employee-panel-overlay" onclick="closeEmployeePanel()"
+         class="fixed inset-0 bg-black/30 hidden z-40"></div>
+
+    <aside id="employee-panel"
+           class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl transform translate-x-full transition-transform duration-200 ease-out z-50 overflow-y-auto">
+        <div class="p-5 border-b flex justify-between items-center sticky top-0 bg-white">
+            <h3 class="font-semibold text-gray-900">Employee Summary</h3>
+            <button type="button" onclick="closeEmployeePanel()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        </div>
+        <div id="employee-panel-body" class="p-5 text-sm">
+            <div class="text-gray-400">Loading...</div>
+        </div>
+    </aside>
+
+    <script>
+        function openEmployeePanel(id) {
+            const overlay = document.getElementById('employee-panel-overlay');
+            const panel = document.getElementById('employee-panel');
+            const body = document.getElementById('employee-panel-body');
+
+            overlay.classList.remove('hidden');
+            panel.classList.remove('translate-x-full');
+            body.innerHTML = '<div class="text-gray-400">Loading...</div>';
+
+            fetch(`/employees/${id}/summary`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Request failed');
+                    return res.json();
+                })
+                .then(data => {
+                    const historyHtml = data.employment_history.map(h => `
+                        <div class="py-2 border-b last:border-0">
+                            <div class="font-medium text-gray-800">${h.position ?? ''}</div>
+                            <div class="text-xs text-gray-500">${h.company_name ?? ''}</div>
+                            <div class="text-xs text-gray-400">${h.start ?? ''} &ndash; ${h.end ?? ''}</div>
+                        </div>
+                    `).join('') || '<p class="text-gray-400 text-xs">No history recorded.</p>';
+
+                    const docsHtml = data.documents.map(d => `
+                        <a href="${d.url}" target="_blank" class="block py-2 border-b last:border-0 text-blue-600 text-xs hover:underline">
+                            ${d.document_type ?? ''} &middot; ${d.file_name ?? ''}
+                        </a>
+                    `).join('') || '<p class="text-gray-400 text-xs">No documents uploaded.</p>';
+
+                    const initial = (data.full_name || '?').charAt(0);
+
+                    body.innerHTML = `
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="h-12 w-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-lg">
+                                ${initial}
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">${data.full_name ?? ''}</div>
+                                <div class="text-xs text-gray-500">${data.job_title ?? '\u2014'} &middot; ${data.department ?? '\u2014'}</div>
+                                <div class="text-xs text-gray-400">${data.employee_number ?? ''}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <div class="text-xs font-semibold text-gray-500 mb-2 tracking-wide">PERSONAL SUMMARY</div>
+                            <div class="space-y-1 text-xs text-gray-700">
+                                <div>Email: ${data.email ?? '\u2014'}</div>
+                                <div>Phone: ${data.phone_number ?? '\u2014'}</div>
+                                <div>Gender: ${data.gender ?? '\u2014'}</div>
+                                <div>Date of Birth: ${data.date_of_birth ?? '\u2014'}</div>
+                                <div>Address: ${data.current_address ?? '\u2014'}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5">
+                            <div class="text-xs font-semibold text-gray-500 mb-2 tracking-wide">EMPLOYMENT HISTORY</div>
+                            ${historyHtml}
+                        </div>
+
+                        <div class="mb-5">
+                            <div class="text-xs font-semibold text-gray-500 mb-2 tracking-wide">DOCUMENTS</div>
+                            ${docsHtml}
+                        </div>
+
+                        <a href="${data.profile_url}" class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                            View Full Profile
+                        </a>
+                    `;
+                })
+                .catch(() => {
+                    body.innerHTML = '<p class="text-red-500 text-xs">Could not load this employee. Try again.</p>';
+                });
+        }
+
+        function closeEmployeePanel() {
+            document.getElementById('employee-panel-overlay').classList.add('hidden');
+            document.getElementById('employee-panel').classList.add('translate-x-full');
+        }
+    </script>
 @endsection

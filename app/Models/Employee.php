@@ -73,6 +73,21 @@ class Employee extends Model
         return $this->hasOne(User::class);
     }
 
+    public function salaryStructures(): HasMany
+    {
+        return $this->hasMany(SalaryStructure::class)->orderByDesc('effective_date');
+    }
+
+    public function currentSalary(): HasOne
+    {
+        return $this->hasOne(SalaryStructure::class)->latestOfMany('effective_date');
+    }
+
+    public function payslips(): HasMany
+    {
+        return $this->hasMany(Payslip::class)->orderByDesc('created_at');
+    }
+
     // ----- Convenience accessors -----
 
     public function getFullNameAttribute(): string
