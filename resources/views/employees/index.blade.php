@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Employee Directory')
-@section('breadcrumb', 'Home / Employee Records / Employee Directory')
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Employee Records</span>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Employee Directory</span>
+@endsection
 
 @section('content')
     <div class="flex items-start justify-between mb-6">
@@ -36,9 +42,9 @@
             <option value="terminated" @selected(request('employment_status') === 'terminated')>Terminated</option>
         </select>
 
-        <button type="submit" class="border rounded-md px-4 py-2 text-sm bg-gray-50 hover:bg-gray-100">Filter</button>
         <a href="{{ route('employees.index') }}" class="border rounded-md px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Reset</a>
     </form>
+    <p class="text-xs text-gray-400 -mt-3 mb-4">Tip: press Enter in the search box to search. Department/Status filter automatically.</p>
 
     {{-- Table --}}
     <div class="bg-white border rounded-lg overflow-hidden">
@@ -153,6 +159,14 @@
                     `).join('') || '<p class="text-gray-400 text-xs">No documents uploaded.</p>';
 
                     const initial = (data.full_name || '?').charAt(0);
+                    const statusColors = {
+                        active: 'background:#dcfce7;color:#15803d;',
+                        on_leave: 'background:#fef3c7;color:#b45309;',
+                        inactive: 'background:#f3f4f6;color:#4b5563;',
+                        terminated: 'background:#fee2e2;color:#b91c1c;',
+                    };
+                    const statusLabel = (data.employment_status || '').replace('_', ' ');
+                    const statusStyle = statusColors[data.employment_status] || statusColors.inactive;
 
                     body.innerHTML = `
                         <div class="flex items-center gap-3 mb-5">
@@ -160,7 +174,10 @@
                                 ${initial}
                             </div>
                             <div>
-                                <div class="font-semibold text-gray-900">${data.full_name ?? ''}</div>
+                                <div class="font-semibold text-gray-900 flex items-center gap-2">
+                                    ${data.full_name ?? ''}
+                                    <span style="${statusStyle}" class="text-[10px] px-2 py-0.5 rounded-full capitalize">${statusLabel}</span>
+                                </div>
                                 <div class="text-xs text-gray-500">${data.job_title ?? '\u2014'} &middot; ${data.department ?? '\u2014'}</div>
                                 <div class="text-xs text-gray-400">${data.employee_number ?? ''}</div>
                             </div>

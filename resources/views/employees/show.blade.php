@@ -1,12 +1,31 @@
 @extends('layouts.app')
 
 @section('title', $employee->full_name)
-@section('breadcrumb', 'Home / Employee Records / ' . $employee->full_name)
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
+    <span class="mx-1">/</span>
+    <a href="{{ route('employees.index') }}" class="hover:text-gray-600">Employee Records</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">{{ $employee->full_name }}</span>
+@endsection
 
 @section('content')
     <div class="flex items-start justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ $employee->full_name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                {{ $employee->full_name }}
+                @php
+                    $statusColors = [
+                        'active' => 'bg-green-100 text-green-700',
+                        'on_leave' => 'bg-amber-100 text-amber-700',
+                        'inactive' => 'bg-gray-100 text-gray-600',
+                        'terminated' => 'bg-red-100 text-red-700',
+                    ];
+                @endphp
+                <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
+                    {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
+                </span>
+            </h1>
             <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
         </div>
         <div class="flex gap-2">
@@ -46,18 +65,56 @@
                 <div class="flex justify-between items-start py-3 {{ !$loop->last ? 'border-b' : '' }}">
                     <div>
                         <div class="font-medium text-gray-800">{{ $history->position }}</div>
-                        <div class="text-sm text-gray-500">{{ $history->company_name ?? 'PeopleCore (this company)' }}</div>
+                        <div class="text-sm text-gray-500">{{ $history->company_name ?? 'ERP System (this company)' }}</div>
                         @if ($history->change_reason)
                             <div class="text-xs text-gray-400 mt-1">{{ $history->change_reason }}</div>
                         @endif
                     </div>
-                    <div class="text-sm text-gray-500 text-right">
-                        {{ $history->start_date->format('M Y') }} &ndash; {{ $history->end_date?->format('M Y') ?? 'Present' }}
+                    <div class="flex items-center gap-3">
+                        <div class="text-sm text-gray-500 text-right">
+                            {{ $history->start_date->format('M Y') }} &ndash; {{ $history->end_date?->format('M Y') ?? 'Present' }}
+                        </div>
+                        <form action="{{ route('employees.history.destroy', $history) }}" method="POST"
+                              onsubmit="return confirm('Remove this employment history entry?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Remove</button>
+                        </form>
                     </div>
                 </div>
             @empty
                 <p class="text-sm text-gray-400">No employment history recorded yet.</p>
             @endforelse
+
+            <form action="{{ route('employees.history.store', $employee) }}" method="POST"
+                  class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t mt-4 pt-4">
+                @csrf
+                <div>
+                    <label class="text-xs text-gray-500">Position *</label>
+                    <input type="text" name="position" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">Company (blank = this company)</label>
+                    <input type="text" name="company_name" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">Start Date *</label>
+                    <input type="date" name="start_date" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">End Date (blank = current)</label>
+                    <input type="date" name="end_date" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="text-xs text-gray-500">Reason (e.g. Promotion, Transfer, Prior Employment)</label>
+                    <input type="text" name="change_reason" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                        Add History Entry
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
