@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Payroll Dashboard')
-@section('breadcrumb', 'Home / Payroll / Dashboard')
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Payroll</span>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Dashboard</span>
+@endsection
 
 @section('content')
     <div class="flex items-start justify-between mb-6">

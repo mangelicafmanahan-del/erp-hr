@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('breadcrumb', 'Home')
+@section('breadcrumb')
+    <span class="text-gray-600">Home</span>
+@endsection
 
 @section('content')
     <h1 class="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>

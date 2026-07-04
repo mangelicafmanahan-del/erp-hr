@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Edit Employee')
-@section('breadcrumb', 'Home / Employee Records / Edit Employee')
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
+    <span class="mx-1">/</span>
+    <a href="{{ route('employees.index') }}" class="hover:text-gray-600">Employee Records</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Edit Employee</span>
+@endsection
 
 @section('content')
     <div class="flex items-start justify-between mb-6">

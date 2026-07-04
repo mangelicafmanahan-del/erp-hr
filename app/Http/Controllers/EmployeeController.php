@@ -40,7 +40,7 @@ class EmployeeController extends Controller
             $query->where('employment_status', $status);
         }
 
-        $employees = $query->orderBy('last_name')->paginate(10)->withQueryString();
+        $employees = $query->orderBy('id')->paginate(10)->withQueryString();
         $departments = Department::orderBy('name')->get();
 
         return view('employees.index', compact('employees', 'departments'));
@@ -163,6 +163,34 @@ class EmployeeController extends Controller
         $document->delete();
 
         return redirect()->route('employees.show', $employee)->with('success', 'Document removed.');
+    }
+
+    /**
+     * Manually add an employment history entry (1b) - promotions, transfers,
+     * or prior employment at other companies.
+     */
+    public function storeEmploymentHistory(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'position' => 'required|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'department_id' => 'nullable|exists:departments,id',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'change_reason' => 'nullable|string|max:255',
+        ]);
+
+        EmploymentHistory::create($validated + ['employee_id' => $employee->id]);
+
+        return redirect()->route('employees.show', $employee)->with('success', 'Employment history entry added.');
+    }
+
+    public function destroyEmploymentHistory(EmploymentHistory $history)
+    {
+        $employee = $history->employee;
+        $history->delete();
+
+        return redirect()->route('employees.show', $employee)->with('success', 'Employment history entry removed.');
     }
 
     /**

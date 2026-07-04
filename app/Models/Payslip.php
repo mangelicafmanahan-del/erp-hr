@@ -24,6 +24,7 @@ class Payslip extends Model
         'withholding_tax',
         'total_deductions',
         'net_pay',
+        'payment_method',
     ];
 
     public function payrollRun(): BelongsTo

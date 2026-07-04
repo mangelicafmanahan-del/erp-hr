@@ -23,6 +23,12 @@ Route::post('/employees/{employee}/documents', [EmployeeController::class, 'stor
 Route::delete('/employees/documents/{document}', [EmployeeController::class, 'destroyDocument'])
     ->name('employees.documents.destroy');
 
+Route::post('/employees/{employee}/history', [EmployeeController::class, 'storeEmploymentHistory'])
+    ->name('employees.history.store');
+
+Route::delete('/employees/history/{history}', [EmployeeController::class, 'destroyEmploymentHistory'])
+    ->name('employees.history.destroy');
+
     Route::get('/payroll', [PayrollController::class, 'dashboard'])->name('payroll.dashboard');
 Route::get('/payroll/runs/create', [PayrollController::class, 'createRun'])->name('payroll.runs.create');
 Route::post('/payroll/runs', [PayrollController::class, 'storeRun'])->name('payroll.runs.store');

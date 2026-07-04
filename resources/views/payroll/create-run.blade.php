@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
 @section('title', 'Run Payroll')
-@section('breadcrumb', 'Home / Payroll / Run Payroll')
+@section('breadcrumb')
+    <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
+    <span class="mx-1">/</span>
+    <a href="{{ route('payroll.dashboard') }}" class="hover:text-gray-600">Payroll</a>
+    <span class="mx-1">/</span>
+    <span class="text-gray-600">Run Payroll</span>
+@endsection
 
 @section('content')
     <div class="mb-6">
@@ -28,6 +34,14 @@
         <div>
             <label class="text-sm text-gray-600">Period End *</label>
             <input type="date" name="period_end" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+        </div>
+        <div>
+            <label class="text-sm text-gray-600">Payout Method *</label>
+            <select name="payment_method" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cash">Cash</option>
+                <option value="Check">Check</option>
+            </select>
         </div>
 
         <p class="text-xs text-gray-400">
