@@ -69,8 +69,19 @@
 
             {{-- Not yet built - placeholders only, matching the reference UI's structure.
                  Building these out is future work, not part of this delivery. --}}
+            <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Attendance &amp; Leave</div>
+            <a href="{{ route('attendance.log') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('attendance.log') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Attendance Log
+            </a>
+            <a href="{{ route('attendance.leave') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('attendance.leave') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Leave Requests
+            </a>
+
+            {{-- Not yet built - placeholders only, matching the reference UI's structure.
+                 Building these out is future work, not part of this delivery. --}}
             <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Other Modules</div>
-            <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Attendance &amp; Leave</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Reports</span>
         </nav>
 

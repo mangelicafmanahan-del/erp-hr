@@ -4,6 +4,7 @@ use App\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RecruitmentController;
+use App\Http\Controllers\AttendanceController;
 
 Route::get('/', function () {
     return redirect('/dashboard');
@@ -30,7 +31,7 @@ Route::post('/employees/{employee}/history', [EmployeeController::class, 'storeE
 Route::delete('/employees/history/{history}', [EmployeeController::class, 'destroyEmploymentHistory'])
     ->name('employees.history.destroy');
 
-    Route::get('/payroll', [PayrollController::class, 'dashboard'])->name('payroll.dashboard');
+Route::get('/payroll', [PayrollController::class, 'dashboard'])->name('payroll.dashboard');
 Route::get('/payroll/runs/create', [PayrollController::class, 'createRun'])->name('payroll.runs.create');
 Route::post('/payroll/runs', [PayrollController::class, 'storeRun'])->name('payroll.runs.store');
 Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslips.show');
@@ -58,3 +59,12 @@ Route::post('/recruitment/offers/{offer}/status', [RecruitmentController::class,
 Route::get('/recruitment/offers', [RecruitmentController::class, 'offersIndex'])->name('recruitment.offers');
 
 Route::post('/recruitment/onboarding/{task}/toggle', [RecruitmentController::class, 'toggleOnboardingTask'])->name('recruitment.onboarding.toggle');
+
+Route::get('/attendance', [AttendanceController::class, 'log'])->name('attendance.log');
+Route::post('/attendance/{employee}/clock-in', [AttendanceController::class, 'clockIn'])->name('attendance.clockin');
+Route::post('/attendance/{employee}/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clockout');
+
+Route::get('/attendance/leave', [AttendanceController::class, 'leaveIndex'])->name('attendance.leave');
+Route::post('/attendance/leave', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave.store');
+Route::post('/attendance/leave/{leaveRequest}/approve', [AttendanceController::class, 'approveLeaveRequest'])->name('attendance.leave.approve');
+Route::post('/attendance/leave/{leaveRequest}/reject', [AttendanceController::class, 'rejectLeaveRequest'])->name('attendance.leave.reject');

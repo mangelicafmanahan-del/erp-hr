@@ -88,6 +88,21 @@ class Employee extends Model
         return $this->hasMany(Payslip::class)->orderByDesc('created_at');
     }
 
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class)->orderByDesc('work_date');
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class)->orderByDesc('start_date');
+    }
+
+    public function leaveBalances(): HasMany
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
+
     // ----- Convenience accessors -----
 
     public function getFullNameAttribute(): string

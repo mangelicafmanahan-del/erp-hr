@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\PayrollRun;
 use App\Models\Payslip;
@@ -75,7 +76,17 @@ class PayrollController extends Controller
             $basicSalary = (float) ($employee->currentSalary->basic_salary ?? 0);
             $allowance = (float) ($employee->currentSalary->allowance ?? 0);
 
-            $grossPay = $basicSalary + $allowance;
+            // 2d/4d integration: pull overtime hours logged in Attendance for this exact
+            // pay period, and pay them at a standard 1.25x hourly rate. The hourly rate
+            // itself is a simplified estimate (basic salary / 22 working days / 8 hours) -
+            // same "simplified for demonstration" caveat as the contribution rates below.
+            $overtimeHours = (float) AttendanceRecord::where('employee_id', $employee->id)
+                ->whereBetween('work_date', [$validated['period_start'], $validated['period_end']])
+                ->sum('overtime_hours');
+            $hourlyRate = $basicSalary > 0 ? $basicSalary / 22 / 8 : 0;
+            $overtimePay = round($hourlyRate * 1.25 * $overtimeHours, 2);
+
+            $grossPay = $basicSalary + $allowance + $overtimePay;
 
             // Simplified placeholder contribution rates - see note above.
             $sss = round($basicSalary * 0.045, 2);
@@ -91,7 +102,7 @@ class PayrollController extends Controller
                 'payroll_run_id' => $run->id,
                 'employee_id' => $employee->id,
                 'basic_pay' => $basicSalary,
-                'overtime_pay' => 0,
+                'overtime_pay' => $overtimePay,
                 'bonus_pay' => 0,
                 'gross_pay' => $grossPay,
                 'sss_contribution' => $sss,
@@ -109,6 +120,9 @@ class PayrollController extends Controller
             }
             if ($allowance > 0) {
                 PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'earning', 'description' => 'Allowance', 'amount' => $allowance]);
+            }
+            if ($overtimePay > 0) {
+                PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'earning', 'description' => "Overtime ({$overtimeHours}h)", 'amount' => $overtimePay]);
             }
             PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'deduction', 'description' => 'SSS Contribution', 'amount' => $sss]);
             PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'deduction', 'description' => 'PhilHealth Contribution', 'amount' => $philhealth]);
