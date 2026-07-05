@@ -45,10 +45,31 @@
                 Run Payroll
             </a>
 
+            <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Recruitment</div>
+            <a href="{{ route('recruitment.dashboard') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.dashboard') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Recruitment Dashboard
+            </a>
+            <a href="{{ route('recruitment.vacancies') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.vacancies') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Job Vacancies
+            </a>
+            <a href="{{ route('recruitment.applicants') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.applicants') || request()->routeIs('recruitment.applicants.*') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Applicants
+            </a>
+            <a href="{{ route('recruitment.interviews') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.interviews') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Interviews
+            </a>
+            <a href="{{ route('recruitment.offers') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.offers') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                Offers
+            </a>
+
             {{-- Not yet built - placeholders only, matching the reference UI's structure.
                  Building these out is future work, not part of this delivery. --}}
             <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Other Modules</div>
-            <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Recruitment</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Attendance &amp; Leave</span>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Reports</span>
         </nav>
