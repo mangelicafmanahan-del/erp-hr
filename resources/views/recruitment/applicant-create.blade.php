@@ -61,6 +61,18 @@
                 <input type="text" name="phone" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
             </div>
             <div>
+                <label class="text-sm text-gray-600">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+            </div>
+            <div>
+                <label class="text-sm text-gray-600">Gender</label>
+                <select name="gender" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            <div>
                 <label class="text-sm text-gray-600">Applied On *</label>
                 <input type="date" name="applied_at" required value="{{ now()->format('Y-m-d') }}" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
             </div>

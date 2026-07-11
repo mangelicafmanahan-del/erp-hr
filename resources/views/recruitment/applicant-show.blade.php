@@ -54,7 +54,12 @@
                 <p class="text-xs text-gray-400 mt-4">No resume uploaded.</p>
             @endif
 
-            @if ($applicant->status === 'hired')
+            @if ($applicant->employee_id)
+                <a href="{{ route('employees.show', $applicant->employee_id) }}"
+                   class="block text-center bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-md mt-4">
+                    View Employee Record
+                </a>
+            @elseif ($applicant->status === 'hired')
                 <form action="{{ route('recruitment.applicants.convert', $applicant) }}" method="POST" class="mt-4"
                       onsubmit="return confirm('Create an Employee Records entry for this applicant?');">
                     @csrf
@@ -89,43 +94,49 @@
                 <p class="text-sm text-gray-400">No interviews recorded yet.</p>
             @endforelse
 
-            <form action="{{ route('recruitment.applicants.interviews.store', $applicant) }}" method="POST"
-                  class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t mt-4 pt-4">
-                @csrf
-                <div>
-                    <label class="text-xs text-gray-500">Stage</label>
-                    <input type="text" name="stage" placeholder="HR Interview, Technical, Final" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500">Interviewer</label>
-                    <input type="text" name="interviewer" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500">Date & Time *</label>
-                    <input type="datetime-local" name="interview_date" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500">Score (0-5)</label>
-                    <input type="number" step="0.1" min="0" max="5" name="score" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500">Result</label>
-                    <select name="result" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                        <option value="Pending">Pending</option>
-                        <option value="Passed">Passed</option>
-                        <option value="Failed">Failed</option>
-                    </select>
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="text-xs text-gray-500">Feedback</label>
-                    <textarea name="feedback" rows="2" class="w-full border rounded-md px-3 py-2 text-sm mt-1"></textarea>
-                </div>
-                <div class="sm:col-span-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
-                        Record Interview
-                    </button>
-                </div>
-            </form>
+            @if (in_array($applicant->status, ['offered', 'hired', 'rejected']))
+                <p class="text-xs text-gray-400 border-t mt-4 pt-4">
+                    A decision has already been made for this applicant, so interviews can no longer be recorded.
+                </p>
+            @else
+                <form action="{{ route('recruitment.applicants.interviews.store', $applicant) }}" method="POST"
+                      class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t mt-4 pt-4">
+                    @csrf
+                    <div>
+                        <label class="text-xs text-gray-500">Stage</label>
+                        <input type="text" name="stage" placeholder="HR Interview, Technical, Final" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">Interviewer</label>
+                        <input type="text" name="interviewer" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">Date & Time *</label>
+                        <input type="datetime-local" name="interview_date" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">Score (0-5)</label>
+                        <input type="number" step="0.1" min="0" max="5" name="score" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500">Result</label>
+                        <select name="result" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                            <option value="Pending">Pending</option>
+                            <option value="Passed">Passed</option>
+                            <option value="Failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="text-xs text-gray-500">Feedback</label>
+                        <textarea name="feedback" rows="2" class="w-full border rounded-md px-3 py-2 text-sm mt-1"></textarea>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                            Record Interview
+                        </button>
+                    </div>
+                </form>
+            @endif
         </div>
     </div>
 
@@ -169,41 +180,47 @@
                 <p class="text-sm text-gray-400 mb-4">No offer issued yet.</p>
             @endif
 
-            <form action="{{ route('recruitment.applicants.offer.store', $applicant) }}" method="POST" class="space-y-3 border-t mt-4 pt-4">
-                @csrf
-                <p class="text-xs text-gray-400">{{ $applicant->offer ? 'Revise the offer:' : 'Issue a new offer:' }}</p>
-                <div>
-                    <label class="text-xs text-gray-500">Offered Position</label>
-                    <input type="text" name="offered_position" value="{{ $applicant->jobVacancy->title }}" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+            @if ($applicant->offer && in_array($applicant->offer->status, ['accepted', 'declined']))
+                <p class="text-xs text-gray-400 border-t mt-4 pt-4">
+                    This offer has already been {{ $applicant->offer->status }} and can no longer be revised.
+                </p>
+            @else
+                <form action="{{ route('recruitment.applicants.offer.store', $applicant) }}" method="POST" class="space-y-3 border-t mt-4 pt-4">
+                    @csrf
+                    <p class="text-xs text-gray-400">{{ $applicant->offer ? 'Revise the offer:' : 'Issue a new offer:' }}</p>
                     <div>
-                        <label class="text-xs text-gray-500">Employment Type</label>
-                        <select name="employment_type" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Contractual">Contractual</option>
-                        </select>
+                        <label class="text-xs text-gray-500">Offered Position</label>
+                        <input type="text" name="offered_position" value="{{ $applicant->jobVacancy->title }}" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
                     </div>
-                    <div>
-                        <label class="text-xs text-gray-500">Salary Offered *</label>
-                        <input type="number" step="0.01" min="0" name="salary_offered" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500">Employment Type</label>
+                            <select name="employment_type" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contractual">Contractual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Salary Offered *</label>
+                            <input type="number" step="0.01" min="0" name="salary_offered" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                        </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-gray-500">Offer Date *</label>
-                        <input type="date" name="offer_date" required value="{{ now()->format('Y-m-d') }}" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500">Offer Date *</label>
+                            <input type="date" name="offer_date" required value="{{ now()->format('Y-m-d') }}" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Start Date</label>
+                            <input type="date" name="start_date" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-xs text-gray-500">Start Date</label>
-                        <input type="date" name="start_date" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
-                    {{ $applicant->offer ? 'Update Offer' : 'Send Offer' }}
-                </button>
-            </form>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                        {{ $applicant->offer ? 'Update Offer' : 'Send Offer' }}
+                    </button>
+                </form>
+            @endif
         </div>
 
         {{-- Onboarding Checklist (3d) --}}

@@ -132,6 +132,8 @@ class RecruitmentController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:30',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|string|max:50',
             'applied_at' => 'required|date',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
@@ -174,6 +176,10 @@ class RecruitmentController extends Controller
      */
     public function storeInterview(Request $request, Applicant $applicant)
     {
+        if (in_array($applicant->status, ['offered', 'hired', 'rejected'])) {
+            return back()->with('success', 'A decision has already been made for this applicant - interviews can no longer be recorded.');
+        }
+
         $validated = $request->validate([
             'stage' => 'nullable|string|max:255',
             'interviewer' => 'nullable|string|max:255',
@@ -197,6 +203,10 @@ class RecruitmentController extends Controller
      */
     public function storeOffer(Request $request, Applicant $applicant)
     {
+        if ($applicant->offer && in_array($applicant->offer->status, ['accepted', 'declined'])) {
+            return back()->with('success', 'This offer has already been ' . $applicant->offer->status . ' and can no longer be revised.');
+        }
+
         $validated = $request->validate([
             'offered_position' => 'nullable|string|max:255',
             'employment_type' => 'nullable|in:Full-time,Part-time,Contractual',
@@ -276,6 +286,12 @@ class RecruitmentController extends Controller
      */
     public function convertToEmployee(Applicant $applicant)
     {
+        // Issue 2 fix: guard against converting the same applicant twice
+        if ($applicant->employee_id) {
+            return redirect()->route('employees.edit', $applicant->employee)
+                ->with('success', 'This applicant was already converted to an employee record.');
+        }
+
         if ($applicant->status !== 'hired') {
             return back()->with('success', 'Only hired applicants can be converted to an employee record.');
         }
@@ -290,14 +306,26 @@ class RecruitmentController extends Controller
             'last_name' => $applicant->last_name,
             'email' => $applicant->email,
             'phone_number' => $applicant->phone,
+            // Issue 1 fix: carry over whatever the applicant record actually has
+            'date_of_birth' => $applicant->date_of_birth,
+            'gender' => $applicant->gender,
             'job_title' => optional($applicant->offer)->offered_position ?? $applicant->jobVacancy->title,
             'contract_type' => optional($applicant->offer)->employment_type ?? $applicant->jobVacancy->employment_type,
             'employment_status' => 'active',
             'hire_date' => optional($applicant->offer)->start_date ?? now(),
         ]);
 
-        return redirect()->route('employees.show', $employee)
-            ->with('success', 'Applicant converted to an employee record.');
+        // Issue 2 fix: mark this applicant as converted so the button disappears
+        // and a second click can't create a duplicate employee record
+        $applicant->update(['employee_id' => $employee->id]);
+
+        // Issue 1 fix: land on the Edit page (not the profile) with a clear
+        // prompt, since a job application never collects civil status, full
+        // address, government numbers, or emergency contact - HR completes
+        // those here rather than the applicant form pretending to be a full
+        // employee intake form.
+        return redirect()->route('employees.edit', $employee)
+            ->with('success', "Employee record created for {$employee->full_name}. Please complete civil status, address, government numbers, and emergency contact before saving.");
     }
 
     /**

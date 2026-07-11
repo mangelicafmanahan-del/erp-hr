@@ -64,11 +64,9 @@
                             <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">{{ ucfirst($run->status) }}</span>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            @foreach ($run->payslips()->with('employee')->take(3)->get() as $payslip)
-                                <a href="{{ route('payroll.payslips.show', $payslip) }}" class="text-blue-600 text-xs block">
-                                    {{ $payslip->employee->full_name }}
-                                </a>
-                            @endforeach
+                            <a href="{{ route('payroll.runs.show', $run) }}" class="text-blue-600 text-xs">
+                                {{ $run->payslips_count }} {{ $run->payslips_count === 1 ? 'employee' : 'employees' }} &rarr;
+                            </a>
                         </td>
                     </tr>
                 @empty

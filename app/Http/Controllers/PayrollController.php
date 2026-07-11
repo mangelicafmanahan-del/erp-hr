@@ -21,7 +21,7 @@ class PayrollController extends Controller
         $runs = PayrollRun::withCount('payslips')
             ->withSum('payslips', 'net_pay')
             ->withSum('payslips', 'gross_pay')
-            ->orderByDesc('period_start')
+            ->orderByDesc('id')
             ->paginate(5);
 
         $totals = [
@@ -32,6 +32,18 @@ class PayrollController extends Controller
         ];
 
         return view('payroll.dashboard', compact('runs', 'totals'));
+    }
+
+    /**
+     * All payslips generated in a single payroll run - replaces the old
+     * inline name list on the dashboard (which was also capped at 3 names
+     * regardless of how many employees were actually paid).
+     */
+    public function showRun(PayrollRun $run)
+    {
+        $run->load(['payslips.employee.department']);
+
+        return view('payroll.run-show', compact('run'));
     }
 
     /**

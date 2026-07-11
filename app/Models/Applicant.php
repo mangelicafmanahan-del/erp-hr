@@ -14,10 +14,13 @@ class Applicant extends Model
 
     protected $fillable = [
         'job_vacancy_id',
+        'employee_id',
         'first_name',
         'last_name',
         'email',
         'phone',
+        'date_of_birth',
+        'gender',
         'resume_file_name',
         'resume_path',
         'status',
@@ -28,6 +31,7 @@ class Applicant extends Model
     {
         return [
             'applied_at' => 'date',
+            'date_of_birth' => 'date',
         ];
     }
 
@@ -39,6 +43,11 @@ class Applicant extends Model
     public function jobVacancy(): BelongsTo
     {
         return $this->belongsTo(JobVacancy::class);
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function interviews(): HasMany

@@ -36,7 +36,10 @@ Route::get('/payroll/runs/create', [PayrollController::class, 'createRun'])->nam
 Route::post('/payroll/runs', [PayrollController::class, 'storeRun'])->name('payroll.runs.store');
 Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslips.show');
 
+
 Route::post('/employees/{employee}/salary', [PayrollController::class, 'storeSalary'])->name('employees.salary.store');
+
+Route::get('/payroll/runs/{run}', [PayrollController::class, 'showRun'])->name('payroll.runs.show');
 
 Route::get('/recruitment', [RecruitmentController::class, 'dashboard'])->name('recruitment.dashboard');
 
