@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\RecruitmentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AboutController;
 
 Route::get('/', function () {
     return redirect('/dashboard');
@@ -13,6 +14,10 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
+
+Route::get('/about', [AboutController::class, 'show'])->name('about.show');
+Route::get('/about/edit', [AboutController::class, 'edit'])->name('about.edit');
+Route::put('/about', [AboutController::class, 'update'])->name('about.update');
 
 Route::get('/employees/{employee}/summary', [EmployeeController::class, 'summary'])
     ->name('employees.summary');

@@ -85,7 +85,11 @@
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Reports</span>
         </nav>
 
-        <div class="px-3 py-4 border-t border-slate-800 text-sm">
+        <div class="px-3 py-4 border-t border-slate-800 text-sm space-y-1">
+            <a href="{{ route('about.show') }}"
+               class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('about.*') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                About the Developers
+            </a>
             <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Settings</span>
         </div>
     </aside>
