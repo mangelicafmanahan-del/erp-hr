@@ -40,7 +40,10 @@ class EmployeeController extends Controller
             $query->where('employment_status', $status);
         }
 
-        $employees = $query->orderBy('last_name')->paginate(10)->withQueryString();
+        // FIX: was orderBy('last_name') - regressed back to alphabetical
+        // sorting during the auth/RBAC rebuild. Restoring the successive
+        // employee_id ordering you asked for earlier.
+        $employees = $query->orderBy('id')->paginate(10)->withQueryString();
         $departments = Department::orderBy('name')->get();
 
         return view('employees.index', compact('employees', 'departments'));
@@ -61,6 +64,12 @@ class EmployeeController extends Controller
     {
         $validated = $this->validateEmployee($request);
         $validated['employee_number'] = $this->generateEmployeeNumber();
+
+        // NEW: profile photo upload
+        if ($request->hasFile('photo')) {
+            $request->validate(['photo' => 'image|max:2048']); // 2MB max
+            $validated['profile_photo_path'] = $request->file('photo')->store('employee-photos', 'public');
+        }
 
         $employee = Employee::create($validated);
 
@@ -116,7 +125,36 @@ class EmployeeController extends Controller
     {
         $validated = $this->validateEmployee($request, $employee->id);
 
+        // NEW: profile photo upload - replace the old file if a new one is given
+        if ($request->hasFile('photo')) {
+            $request->validate(['photo' => 'image|max:2048']); // 2MB max
+            if ($employee->profile_photo_path) {
+                Storage::disk('public')->delete($employee->profile_photo_path);
+            }
+            $validated['profile_photo_path'] = $request->file('photo')->store('employee-photos', 'public');
+        }
+
         $employee->update($validated);
+
+        // NEW: create a login account from the Edit page too - previously this
+        // was only possible on the Add Employee form, which meant an employee
+        // converted from Recruitment (who lands here automatically) had no way
+        // to get an account without a separate, undocumented step.
+        if (! $employee->userAccount && $request->boolean('create_account')) {
+            $request->validate([
+                'account_email' => 'required|email|unique:users,email',
+                'account_password' => 'required|min:8',
+                'role' => 'required|in:admin,hr_manager,employee',
+            ]);
+
+            User::create([
+                'employee_id' => $employee->id,
+                'name' => $employee->full_name,
+                'email' => $request->input('account_email'),
+                'password' => Hash::make($request->input('account_password')),
+                'role' => $request->input('role'),
+            ]);
+        }
 
         return redirect()->route('employees.show', $employee)
             ->with('success', 'Employee updated successfully.');
@@ -194,6 +232,22 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Self-service: an employee viewing their OWN profile (read-only).
+     */
+    public function myProfile()
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $employee->load(['department', 'employmentHistory.department', 'documents', 'userAccount']);
+
+        return view('employees.my-profile', compact('employee'));
+    }
+
+    /**
      * Lightweight JSON summary used by the Employee Directory slide-over panel.
      */
     public function summary(Employee $employee)
@@ -216,6 +270,8 @@ class EmployeeController extends Controller
             'gender' => $employee->gender,
             'date_of_birth' => optional($employee->date_of_birth)->format('M d, Y'),
             'current_address' => $employee->current_address,
+            // NEW: photo, so the slide-over panel can show it instead of just an initial
+            'photo_url' => $employee->profile_photo_path ? Storage::url($employee->profile_photo_path) : null,
 
             'employment_history' => $employee->employmentHistory->map(function ($history) {
                 return [
@@ -236,25 +292,6 @@ class EmployeeController extends Controller
 
             'profile_url' => route('employees.show', $employee),
         ]);
-    }
-
-    /**
-     * Self-service: an employee viewing their OWN profile (read-only).
-     * Distinct from show() - no Edit button, no document upload, no salary
-     * form, no history-editing. Not a security boundary by itself (that's
-     * the route middleware) - this is just the trimmed-down view.
-     */
-    public function myProfile()
-    {
-        $employee = auth()->user()->employee;
-
-        if (! $employee) {
-            abort(404, 'No employee record is linked to your account yet. Contact HR.');
-        }
-
-        $employee->load(['department', 'employmentHistory.department', 'documents', 'userAccount']);
-
-        return view('employees.my-profile', compact('employee'));
     }
 
     // ----- Helpers -----

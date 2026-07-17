@@ -186,6 +186,7 @@ class AttendanceController extends Controller
     {
         $leaveRequest->update([
             'status' => 'approved',
+            'approved_by' => auth()->id(),
             'approved_at' => now(),
         ]);
 

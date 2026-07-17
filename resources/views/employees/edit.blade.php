@@ -28,12 +28,28 @@
         </div>
     @endif
 
-    <form action="{{ route('employees.update', $employee) }}" method="POST" class="space-y-6">
+    <form action="{{ route('employees.update', $employee) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
 
         <section class="bg-white border rounded-lg p-6">
             <h2 class="font-semibold text-gray-900 mb-4">Personal Information</h2>
+
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b">
+                @if ($employee->profile_photo_path)
+                    <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" alt="{{ $employee->full_name }}"
+                         class="h-16 w-16 rounded-full object-cover border">
+                @else
+                    <div class="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xl">
+                        {{ strtoupper(substr($employee->first_name, 0, 1)) }}
+                    </div>
+                @endif
+                <div class="flex-1">
+                    <label class="text-sm text-gray-600">Profile Photo (PNG/JPG, max 2MB)</label>
+                    <input type="file" name="photo" accept="image/*" class="w-full text-sm mt-1">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 @php
                     $f = fn($field) => old($field, $employee->$field);
@@ -194,6 +210,51 @@
                            class="w-full border rounded-md px-3 py-2 text-sm mt-1">
                 </div>
             </div>
+        </section>
+
+        {{-- Account & Roles - NEW on the Edit form. Previously this option only
+             existed on Add Employee, which meant an employee converted from
+             Recruitment (who lands here automatically) had no way to get a
+             login account without a separate, undocumented step. --}}
+        <section class="bg-white border rounded-lg p-6">
+            <h2 class="font-semibold text-gray-900 mb-1">Account &amp; Roles</h2>
+
+            @if ($employee->userAccount)
+                <p class="text-sm text-gray-500 mb-2">This employee already has a login account:</p>
+                <div class="text-sm bg-gray-50 border rounded-md px-4 py-3">
+                    {{ $employee->userAccount->email }} &middot; <span class="text-gray-500">{{ $employee->userAccount->role }}</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">To change their password or role, that's a separate step not yet built - contact your system administrator.</p>
+            @else
+                <p class="text-sm text-gray-500 mb-4">This employee doesn't have a login account yet.</p>
+
+                <label class="flex items-center gap-2 text-sm mb-4">
+                    <input type="checkbox" name="create_account" value="1" {{ old('create_account') ? 'checked' : '' }}
+                           onchange="document.getElementById('account-fields').classList.toggle('hidden')">
+                    Create a login account for this employee
+                </label>
+
+                <div id="account-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-4 {{ old('create_account') ? '' : 'hidden' }}">
+                    <div>
+                        <label class="text-sm text-gray-600">Login Email</label>
+                        <input type="email" name="account_email" value="{{ old('account_email') }}"
+                               class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600">Temporary Password</label>
+                        <input type="password" name="account_password"
+                               class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600">Role</label>
+                        <select name="role" class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                            <option value="employee" @selected(old('role') === 'employee')>Employee</option>
+                            <option value="hr_manager" @selected(old('role') === 'hr_manager')>HR Manager</option>
+                            <option value="admin" @selected(old('role') === 'admin')>Admin</option>
+                        </select>
+                    </div>
+                </div>
+            @endif
         </section>
 
         <div class="flex justify-end gap-3">

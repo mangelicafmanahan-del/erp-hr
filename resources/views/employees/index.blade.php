@@ -168,11 +168,14 @@
                     const statusLabel = (data.employment_status || '').replace('_', ' ');
                     const statusStyle = statusColors[data.employment_status] || statusColors.inactive;
 
+                    // NEW: real photo if available, falls back to the initial-letter circle
+                    const avatarHtml = data.photo_url
+                        ? `<img src="${data.photo_url}" alt="${data.full_name ?? ''}" class="h-12 w-12 rounded-full object-cover">`
+                        : `<div class="h-12 w-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-lg">${initial}</div>`;
+
                     body.innerHTML = `
                         <div class="flex items-center gap-3 mb-5">
-                            <div class="h-12 w-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-lg">
-                                ${initial}
-                            </div>
+                            ${avatarHtml}
                             <div>
                                 <div class="font-semibold text-gray-900 flex items-center gap-2">
                                     ${data.full_name ?? ''}

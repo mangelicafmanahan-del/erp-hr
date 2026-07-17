@@ -11,22 +11,32 @@
 
 @section('content')
     <div class="flex items-start justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                {{ $employee->full_name }}
-                @php
-                    $statusColors = [
-                        'active' => 'bg-green-100 text-green-700',
-                        'on_leave' => 'bg-amber-100 text-amber-700',
-                        'inactive' => 'bg-gray-100 text-gray-600',
-                        'terminated' => 'bg-red-100 text-red-700',
-                    ];
-                @endphp
-                <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
-                    {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
-                </span>
-            </h1>
-            <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
+        <div class="flex items-center gap-4">
+            @if ($employee->profile_photo_path)
+                <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" alt="{{ $employee->full_name }}"
+                     class="h-16 w-16 rounded-full object-cover border">
+            @else
+                <div class="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xl">
+                    {{ strtoupper(substr($employee->first_name, 0, 1)) }}
+                </div>
+            @endif
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    {{ $employee->full_name }}
+                    @php
+                        $statusColors = [
+                            'active' => 'bg-green-100 text-green-700',
+                            'on_leave' => 'bg-amber-100 text-amber-700',
+                            'inactive' => 'bg-gray-100 text-gray-600',
+                            'terminated' => 'bg-red-100 text-red-700',
+                        ];
+                    @endphp
+                    <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
+                        {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
+                    </span>
+                </h1>
+                <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
+            </div>
         </div>
         <div class="flex gap-2">
             <a href="{{ route('employees.edit', $employee) }}" class="border rounded-md px-4 py-2 text-sm text-gray-600">Edit</a>
@@ -65,7 +75,7 @@
                 <div class="flex justify-between items-start py-3 {{ !$loop->last ? 'border-b' : '' }}">
                     <div>
                         <div class="font-medium text-gray-800">{{ $history->position }}</div>
-                        <div class="text-sm text-gray-500">{{ $history->company_name ?? 'ERP System (this company)' }}</div>
+                        <div class="text-sm text-gray-500">{{ $history->company_name ?? 'This company' }}</div>
                         @if ($history->change_reason)
                             <div class="text-xs text-gray-400 mt-1">{{ $history->change_reason }}</div>
                         @endif
@@ -122,7 +132,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div class="bg-white border rounded-lg p-6">
             <h2 class="font-semibold text-gray-900 mb-1">Salary</h2>
-            <p class="text-xs text-gray-400 mb-4">Setting a new salary here doesn't overwrite history - it adds a new dated entry.</p>
+            <p class="text-xs text-gray-400 mb-4">Setting a new salary here doesn't overwrite history - it adds a new dated entry. Use this when an employee is promoted or gets a raise.</p>
 
             @if ($employee->currentSalary)
                 <div class="text-sm mb-4 pb-4 border-b">

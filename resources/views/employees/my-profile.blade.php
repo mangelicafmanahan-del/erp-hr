@@ -17,15 +17,25 @@
         ];
     @endphp
 
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            {{ $employee->full_name }}
-            <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
-                {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
-            </span>
-        </h1>
-        <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
-        <p class="text-xs text-gray-400 mt-1">This is a read-only view. Contact HR to update any of this information.</p>
+    <div class="flex items-center gap-4 mb-6">
+        @if ($employee->profile_photo_path)
+            <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" alt="{{ $employee->full_name }}"
+                 class="h-16 w-16 rounded-full object-cover border">
+        @else
+            <div class="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xl">
+                {{ strtoupper(substr($employee->first_name, 0, 1)) }}
+            </div>
+        @endif
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                {{ $employee->full_name }}
+                <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
+                    {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
+                </span>
+            </h1>
+            <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
+            <p class="text-xs text-gray-400 mt-1">This is a read-only view. Contact HR to update any of this information.</p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

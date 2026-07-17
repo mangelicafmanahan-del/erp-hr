@@ -29,12 +29,23 @@
         </div>
     @endif
 
-    <form action="{{ route('employees.store') }}" method="POST" class="space-y-6">
+    <form action="{{ route('employees.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
         {{-- Personal Information --}}
         <section class="bg-white border rounded-lg p-6">
             <h2 class="font-semibold text-gray-900 mb-4">Personal Information</h2>
+
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b">
+                <div class="h-16 w-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-xl">
+                    ?
+                </div>
+                <div class="flex-1">
+                    <label class="text-sm text-gray-600">Profile Photo (PNG/JPG, max 2MB)</label>
+                    <input type="file" name="photo" accept="image/*" class="w-full text-sm mt-1">
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                     <label class="text-sm text-gray-600">First Name *</label>
