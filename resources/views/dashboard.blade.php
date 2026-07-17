@@ -24,7 +24,13 @@
         </div>
     </div>
 
-    <div class="mt-8 rounded-lg border bg-white p-5">
-        <a href="{{ route('employees.index') }}" class="text-blue-600 font-medium text-sm">Go to Employee Directory &rarr;</a>
-    </div>
+    @if (in_array(auth()->user()->role, ['admin', 'hr_manager']))
+        <div class="mt-8 rounded-lg border bg-white p-5">
+            <a href="{{ route('employees.index') }}" class="text-blue-600 font-medium text-sm">Go to Employee Directory &rarr;</a>
+        </div>
+    @else
+        <div class="mt-8 rounded-lg border bg-white p-5">
+            <a href="{{ route('my.profile') }}" class="text-blue-600 font-medium text-sm">Go to My Profile &rarr;</a>
+        </div>
+    @endif
 @endsection

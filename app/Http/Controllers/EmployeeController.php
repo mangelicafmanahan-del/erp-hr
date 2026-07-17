@@ -40,7 +40,7 @@ class EmployeeController extends Controller
             $query->where('employment_status', $status);
         }
 
-        $employees = $query->orderBy('id')->paginate(10)->withQueryString();
+        $employees = $query->orderBy('last_name')->paginate(10)->withQueryString();
         $departments = Department::orderBy('name')->get();
 
         return view('employees.index', compact('employees', 'departments'));
@@ -100,7 +100,7 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['department', 'employmentHistory.department', 'documents', 'userAccount']);
+        $employee->load(['department', 'employmentHistory.department', 'documents', 'userAccount', 'payslips.payrollRun']);
 
         return view('employees.show', compact('employee'));
     }
@@ -194,49 +194,68 @@ class EmployeeController extends Controller
     }
 
     /**
- * Lightweight JSON summary used by the Employee Directory slide-over panel.
- */
-public function summary(Employee $employee)
-{
-    $employee->load([
-        'department',
-        'employmentHistory.department',
-        'documents',
-    ]);
+     * Lightweight JSON summary used by the Employee Directory slide-over panel.
+     */
+    public function summary(Employee $employee)
+    {
+        $employee->load([
+            'department',
+            'employmentHistory.department',
+            'documents',
+        ]);
 
-    return response()->json([
-        'id' => $employee->id,
-        'employee_number' => $employee->employee_number,
-        'full_name' => $employee->full_name,
-        'job_title' => $employee->job_title,
-        'department' => $employee->department?->name,
-        'employment_status' => $employee->employment_status,
-        'email' => $employee->email,
-        'phone_number' => $employee->phone_number,
-        'gender' => $employee->gender,
-        'date_of_birth' => optional($employee->date_of_birth)->format('M d, Y'),
-        'current_address' => $employee->current_address,
+        return response()->json([
+            'id' => $employee->id,
+            'employee_number' => $employee->employee_number,
+            'full_name' => $employee->full_name,
+            'job_title' => $employee->job_title,
+            'department' => $employee->department?->name,
+            'employment_status' => $employee->employment_status,
+            'email' => $employee->email,
+            'phone_number' => $employee->phone_number,
+            'gender' => $employee->gender,
+            'date_of_birth' => optional($employee->date_of_birth)->format('M d, Y'),
+            'current_address' => $employee->current_address,
 
-        'employment_history' => $employee->employmentHistory->map(function ($history) {
-            return [
-                'position' => $history->position,
-                'company_name' => $history->company_name ?? 'This Company',
-                'start' => optional($history->start_date)->format('M Y'),
-                'end' => optional($history->end_date)->format('M Y') ?? 'Present',
-            ];
-        })->values(),
+            'employment_history' => $employee->employmentHistory->map(function ($history) {
+                return [
+                    'position' => $history->position,
+                    'company_name' => $history->company_name ?? 'This Company',
+                    'start' => optional($history->start_date)->format('M Y'),
+                    'end' => optional($history->end_date)->format('M Y') ?? 'Present',
+                ];
+            })->values(),
 
-        'documents' => $employee->documents->map(function ($document) {
-            return [
-                'document_type' => $document->document_type,
-                'file_name' => $document->file_name,
-                'url' => Storage::url($document->file_path),
-            ];
-        })->values(),
+            'documents' => $employee->documents->map(function ($document) {
+                return [
+                    'document_type' => $document->document_type,
+                    'file_name' => $document->file_name,
+                    'url' => Storage::url($document->file_path),
+                ];
+            })->values(),
 
-        'profile_url' => route('employees.show', $employee),
-    ]);
-}
+            'profile_url' => route('employees.show', $employee),
+        ]);
+    }
+
+    /**
+     * Self-service: an employee viewing their OWN profile (read-only).
+     * Distinct from show() - no Edit button, no document upload, no salary
+     * form, no history-editing. Not a security boundary by itself (that's
+     * the route middleware) - this is just the trimmed-down view.
+     */
+    public function myProfile()
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $employee->load(['department', 'employmentHistory.department', 'documents', 'userAccount']);
+
+        return view('employees.my-profile', compact('employee'));
+    }
 
     // ----- Helpers -----
 

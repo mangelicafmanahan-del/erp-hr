@@ -22,9 +22,15 @@ class AttendanceController extends Controller
     public function log(Request $request)
     {
         $date = $request->input('date', now()->format('Y-m-d'));
+        $user = auth()->user();
 
         $query = Employee::where('employment_status', 'active')
             ->with(['attendanceRecords' => fn ($q) => $q->where('work_date', $date)]);
+
+        // Self-service scoping: an employee only ever sees their own row here
+        if ($user->role === 'employee') {
+            $query->where('id', $user->employee_id);
+        }
 
         if ($departmentId = $request->input('department_id')) {
             $query->where('department_id', $departmentId);
@@ -43,7 +49,11 @@ class AttendanceController extends Controller
         // Monthly summary for the selected date's month (4d)
         $monthStart = Carbon::parse($date)->startOfMonth();
         $monthEnd = Carbon::parse($date)->endOfMonth();
-        $monthRecords = AttendanceRecord::whereBetween('work_date', [$monthStart, $monthEnd])->get();
+        $monthQuery = AttendanceRecord::whereBetween('work_date', [$monthStart, $monthEnd]);
+        if ($user->role === 'employee') {
+            $monthQuery->where('employee_id', $user->employee_id);
+        }
+        $monthRecords = $monthQuery->get();
 
         $summary = [
             'present' => $monthRecords->where('status', 'present')->count(),
@@ -61,6 +71,11 @@ class AttendanceController extends Controller
      */
     public function clockIn(Employee $employee)
     {
+        $user = auth()->user();
+        if ($user->role === 'employee' && $employee->id !== $user->employee_id) {
+            abort(403, 'You can only clock yourself in.');
+        }
+
         $today = now()->format('Y-m-d');
         $now = now();
         $isLate = $now->format('H:i:s') > self::WORKDAY_START;
@@ -82,6 +97,11 @@ class AttendanceController extends Controller
      */
     public function clockOut(Employee $employee)
     {
+        $user = auth()->user();
+        if ($user->role === 'employee' && $employee->id !== $user->employee_id) {
+            abort(403, 'You can only clock yourself out.');
+        }
+
         $today = now()->format('Y-m-d');
         $record = AttendanceRecord::where('employee_id', $employee->id)->where('work_date', $today)->first();
 
@@ -108,33 +128,46 @@ class AttendanceController extends Controller
      */
     public function leaveIndex(Request $request)
     {
+        $user = auth()->user();
         $employees = Employee::where('employment_status', 'active')->orderBy('last_name')->get();
         $leaveTypes = LeaveType::orderBy('name')->get();
 
         $query = LeaveRequest::with(['employee', 'leaveType']);
+        if ($user->role === 'employee') {
+            $query->where('employee_id', $user->employee_id);
+        }
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
         $requests = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
 
         $currentYear = now()->year;
-        $balances = LeaveBalance::with(['employee', 'leaveType'])
-            ->where('year', $currentYear)
-            ->get()
-            ->sortBy(fn ($b) => $b->employee->full_name ?? '');
+        $balanceQuery = LeaveBalance::with(['employee', 'leaveType'])->where('year', $currentYear);
+        if ($user->role === 'employee') {
+            $balanceQuery->where('employee_id', $user->employee_id);
+        }
+        $balances = $balanceQuery->get()->sortBy(fn ($b) => $b->employee->full_name ?? '');
 
         return view('attendance.leave', compact('employees', 'leaveTypes', 'requests', 'balances'));
     }
 
     public function storeLeaveRequest(Request $request)
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|exists:employees,id',
+        $user = auth()->user();
+
+        $rules = [
             'leave_type_id' => 'required|exists:leave_types,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string',
-        ]);
+        ];
+        // HR can file on behalf of anyone; an employee can only file for themselves
+        $rules['employee_id'] = $user->role === 'employee' ? 'nullable' : 'required|exists:employees,id';
+
+        $validated = $request->validate($rules);
+
+        // Force-override employee_id for self-service, ignoring anything submitted
+        $validated['employee_id'] = $user->role === 'employee' ? $user->employee_id : $validated['employee_id'];
 
         $days = Carbon::parse($validated['start_date'])->diffInDays(Carbon::parse($validated['end_date'])) + 1;
         $validated['days_requested'] = $days;

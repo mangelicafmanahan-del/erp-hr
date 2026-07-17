@@ -153,9 +153,30 @@ class PayrollController extends Controller
      */
     public function showPayslip(Payslip $payslip)
     {
+        $user = auth()->user();
+        if ($user->role === 'employee' && $payslip->employee_id !== $user->employee_id) {
+            abort(403, 'You can only view your own payslips.');
+        }
+
         $payslip->load(['employee.department', 'payrollRun', 'earnings', 'deductions', 'employee.payslips.payrollRun']);
 
         return view('payroll.payslip', compact('payslip'));
+    }
+
+    /**
+     * Self-service: an employee's own payslip list.
+     */
+    public function myPayslips()
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $payslips = $employee->payslips()->with('payrollRun')->paginate(10);
+
+        return view('payroll.my-payslips', compact('payslips', 'employee'));
     }
 
     /**

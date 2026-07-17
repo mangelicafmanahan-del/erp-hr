@@ -32,15 +32,19 @@
 
             <form action="{{ route('attendance.leave.store') }}" method="POST" class="space-y-3">
                 @csrf
-                <div>
-                    <label class="text-xs text-gray-500">Employee *</label>
-                    <select name="employee_id" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                        <option value="">Select Employee</option>
-                        @foreach ($employees as $employee)
-                            <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                @if (auth()->user()->role !== 'employee')
+                    <div>
+                        <label class="text-xs text-gray-500">Employee *</label>
+                        <select name="employee_id" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
+                            <option value="">Select Employee</option>
+                            @foreach ($employees as $employee)
+                                <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <p class="text-xs text-gray-400">Filing this request for yourself.</p>
+                @endif
                 <div>
                     <label class="text-xs text-gray-500">Leave Type *</label>
                     <select name="leave_type_id" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
@@ -110,7 +114,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                @if ($request->status === 'pending')
+                                @if ($request->status === 'pending' && auth()->user()->role !== 'employee')
                                     <form action="{{ route('attendance.leave.approve', $request) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="text-green-600 text-xs mr-2">Approve</button>

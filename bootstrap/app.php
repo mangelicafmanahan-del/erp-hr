@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Registers 'role' as an alias for CheckRole so routes can use
+        // ->middleware('role:hr_manager,admin'). Without this the alias
+        // doesn't exist and every route using it throws an error.
+        $middleware->alias([
+            'role' => CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
