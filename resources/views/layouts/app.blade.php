@@ -82,8 +82,6 @@
                     Leave Requests
                 </a>
 
-                <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">Other Modules</div>
-                <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Reports</span>
             @else
                 {{-- Employee self-service navigation --}}
                 <div class="pt-3 pb-1 px-3 text-[11px] uppercase tracking-wide text-slate-500">My Records</div>
@@ -111,7 +109,7 @@
                class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('about.*') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
                 About the Developers
             </a>
-            <span class="flex items-center gap-2 px-3 py-2 rounded-md opacity-40 cursor-not-allowed">Settings</span>
+
         </div>
     </aside>
 

@@ -17,7 +17,7 @@
         </div>
         <a href="{{ route('payroll.runs.create') }}"
            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
-            &#9654; Run Payroll
+            Run Payroll
         </a>
     </div>
 
