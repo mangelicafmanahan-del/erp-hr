@@ -169,10 +169,18 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Upload a document/certification/ID for an employee (1c)
+     * Upload a document/certification/ID for an employee (1c).
+     * Now callable by the employee themselves (self-service), or by HR for
+     * anyone. This route is moving OUT of the HR-only middleware group -
+     * see the routes patch in this same zip.
      */
     public function storeDocument(Request $request, Employee $employee)
     {
+        $user = auth()->user();
+        if ($user->role === 'employee' && $employee->id !== $user->employee_id) {
+            abort(403, 'You can only upload documents for yourself.');
+        }
+
         $request->validate([
             'document_type' => 'required|string|max:255',
             'file' => 'required|file|max:5120|mimes:pdf,jpg,jpeg,png', // 5MB max
@@ -193,6 +201,7 @@ class EmployeeController extends Controller
 
         return back()->with('success', 'Document uploaded.');
     }
+
 
     public function destroyDocument(EmployeeDocument $document)
     {

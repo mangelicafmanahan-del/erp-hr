@@ -31,7 +31,7 @@
                 @forelse ($offers as $offer)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3">{{ $offer->applicant->full_name }}</td>
-                        <td class="px-4 py-3">{{ $offer->offered_position ?? '\u2014' }}</td>
+                        <td class="px-4 py-3">{{ $offer->offered_position ?? '—' }}</td>
                         <td class="px-4 py-3">&#8369;{{ number_format($offer->salary_offered, 2) }}</td>
                         <td class="px-4 py-3">{{ $offer->offer_date->format('M d, Y') }}</td>
                         <td class="px-4 py-3">

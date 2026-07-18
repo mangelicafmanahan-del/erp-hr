@@ -37,16 +37,16 @@
                 @endif
 
                 <h2 class="text-xl font-bold text-gray-900">{{ $profile->name }}</h2>
-                <p class="text-blue-600 text-sm mb-4">{{ $profile->module_name ?? '\u2014' }} Module</p>
+                <p class="text-blue-600 text-sm mb-4">{{ $profile->module_name ?? '—' }} Module</p>
 
                 <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm max-w-lg mx-auto mt-6 pt-6 border-t text-left">
                     <div>
                         <dt class="text-gray-400 text-xs uppercase">Section</dt>
-                        <dd class="text-gray-800">{{ $profile->section ?? '\u2014' }}</dd>
+                        <dd class="text-gray-800">{{ $profile->section ?? '—' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-400 text-xs uppercase">Professor</dt>
-                        <dd class="text-gray-800">{{ $profile->professor ?? '\u2014' }}</dd>
+                        <dd class="text-gray-800">{{ $profile->professor ?? '—' }}</dd>
                     </div>
                     <div>
                         <dt class="text-gray-400 text-xs uppercase">GitHub</dt>

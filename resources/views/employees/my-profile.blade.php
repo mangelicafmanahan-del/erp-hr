@@ -34,7 +34,7 @@
                 </span>
             </h1>
             <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
-            <p class="text-xs text-gray-400 mt-1">This is a read-only view. Contact HR to update any of this information.</p>
+            <p class="text-xs text-gray-400 mt-1">Personal and employment details are read-only here - contact HR to update them.</p>
         </div>
     </div>
 
@@ -44,12 +44,12 @@
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">Employee ID</dt><dd>{{ $employee->employee_number }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ $employee->email }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '—' }}</dd></div>
             </dl>
         </div>
 
@@ -74,9 +74,12 @@
         </div>
     </div>
 
+    {{-- Documents (1c) - NEW: employees can now upload their own --}}
     <div class="bg-white border rounded-lg p-6 mt-6">
-        <h2 class="font-semibold text-gray-900 mb-4">My Documents</h2>
-        <div class="space-y-2">
+        <h2 class="font-semibold text-gray-900 mb-1">My Documents</h2>
+        <p class="text-xs text-gray-400 mb-4">You can upload documents here. Removing a document requires HR.</p>
+
+        <div class="space-y-2 mb-6">
             @forelse ($employee->documents as $doc)
                 <div class="flex items-center justify-between text-sm border rounded-md px-4 py-2">
                     <div>
@@ -86,8 +89,35 @@
                     <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="text-blue-600">Download</a>
                 </div>
             @empty
-                <p class="text-sm text-gray-400">No documents on file.</p>
+                <p class="text-sm text-gray-400">No documents on file yet.</p>
             @endforelse
         </div>
+
+        <form action="{{ route('employees.documents.store', $employee) }}" method="POST" enctype="multipart/form-data"
+              class="flex flex-wrap items-end gap-3 border-t pt-4">
+            @csrf
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Document Type</label>
+                <select name="document_type" required class="border rounded-md px-3 py-2 text-sm">
+                    <option value="Resume">Resume</option>
+                    <option value="Government ID">Government ID</option>
+                    <option value="Certification">Certification</option>
+                    <option value="License">License</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Expiry Date (optional)</label>
+                <input type="date" name="expiry_date" class="border rounded-md px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">File (PDF/JPG/PNG, max 5MB)</label>
+                <input type="file" name="file" required class="text-sm">
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                Upload
+            </button>
+        </form>
     </div>
 @endsection

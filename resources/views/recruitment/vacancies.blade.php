@@ -94,7 +94,7 @@
                                 <div class="font-medium text-gray-800">{{ $vacancy->title }}</div>
                                 <div class="text-xs text-gray-400">Posted {{ $vacancy->posted_date->format('M d, Y') }}</div>
                             </td>
-                            <td class="px-4 py-3">{{ $vacancy->department?->name ?? '\u2014' }}</td>
+                            <td class="px-4 py-3">{{ $vacancy->department?->name ?? '—' }}</td>
                             <td class="px-4 py-3">
                                 <span class="text-xs px-2 py-1 rounded-full {{ $vacancy->status === 'open' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
                                     {{ ucfirst($vacancy->status) }}

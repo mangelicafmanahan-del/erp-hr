@@ -48,6 +48,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance/leave', [AttendanceController::class, 'leaveIndex'])->name('attendance.leave');
     Route::post('/attendance/leave', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave.store');
 
+    Route::post('/employees/{employee}/documents', [EmployeeController::class, 'storeDocument'])
+            ->name('employees.documents.store');
+
     // -----------------------------------------------------------------
     // HR-only - admin and hr_manager roles ONLY (Employee Records, Payroll,
     // Recruitment, and leave approval). This is the real access-control
@@ -57,8 +60,6 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:hr_manager,admin')->group(function () {
 
         Route::resource('employees', EmployeeController::class);
-        Route::post('/employees/{employee}/documents', [EmployeeController::class, 'storeDocument'])
-            ->name('employees.documents.store');
         Route::delete('/employees/documents/{document}', [EmployeeController::class, 'destroyDocument'])
             ->name('employees.documents.destroy');
         Route::post('/employees/{employee}/history', [EmployeeController::class, 'storeEmploymentHistory'])

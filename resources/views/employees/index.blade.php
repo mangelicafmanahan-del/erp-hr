@@ -71,8 +71,8 @@
                                 {{ $employee->full_name }}
                             </button>
                         </td>
-                        <td class="px-4 py-3">{{ $employee->department?->name ?? '\u2014' }}</td>
-                        <td class="px-4 py-3">{{ $employee->job_title ?? '\u2014' }}</td>
+                        <td class="px-4 py-3">{{ $employee->department?->name ?? '—' }}</td>
+                        <td class="px-4 py-3">{{ $employee->job_title ?? '—' }}</td>
                         <td class="px-4 py-3">
                             @php
                                 $statusColors = [
@@ -87,7 +87,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-gray-500">{{ $employee->email }}</td>
-                        <td class="px-4 py-3 text-gray-500">{{ $employee->phone_number ?? '\u2014' }}</td>
+                        <td class="px-4 py-3 text-gray-500">{{ $employee->phone_number ?? '—' }}</td>
                         <td class="px-4 py-3 text-right space-x-2">
                             <a href="{{ route('employees.edit', $employee) }}" class="text-gray-500 hover:text-blue-600">Edit</a>
                             <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="inline"
@@ -181,7 +181,7 @@
                                     ${data.full_name ?? ''}
                                     <span style="${statusStyle}" class="text-[10px] px-2 py-0.5 rounded-full capitalize">${statusLabel}</span>
                                 </div>
-                                <div class="text-xs text-gray-500">${data.job_title ?? '\u2014'} &middot; ${data.department ?? '\u2014'}</div>
+                                <div class="text-xs text-gray-500">${data.job_title ?? '—'} &middot; ${data.department ?? '—'}</div>
                                 <div class="text-xs text-gray-400">${data.employee_number ?? ''}</div>
                             </div>
                         </div>
@@ -189,11 +189,11 @@
                         <div class="mb-5">
                             <div class="text-xs font-semibold text-gray-500 mb-2 tracking-wide">PERSONAL SUMMARY</div>
                             <div class="space-y-1 text-xs text-gray-700">
-                                <div>Email: ${data.email ?? '\u2014'}</div>
-                                <div>Phone: ${data.phone_number ?? '\u2014'}</div>
-                                <div>Gender: ${data.gender ?? '\u2014'}</div>
-                                <div>Date of Birth: ${data.date_of_birth ?? '\u2014'}</div>
-                                <div>Address: ${data.current_address ?? '\u2014'}</div>
+                                <div>Email: ${data.email ?? '—'}</div>
+                                <div>Phone: ${data.phone_number ?? '—'}</div>
+                                <div>Gender: ${data.gender ?? '—'}</div>
+                                <div>Date of Birth: ${data.date_of_birth ?? '—'}</div>
+                                <div>Address: ${data.current_address ?? '—'}</div>
                             </div>
                         </div>
 

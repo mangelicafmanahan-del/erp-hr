@@ -55,8 +55,8 @@
                     <div class="bg-white border rounded-lg p-4">
                         <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">Open</span>
                         <div class="font-semibold text-blue-600 mt-2">{{ $vacancy->title }}</div>
-                        <div class="text-sm text-gray-500">{{ $vacancy->department?->name ?? '\u2014' }}</div>
-                        <div class="text-xs text-gray-400 mt-1">{{ $vacancy->location ?? '\u2014' }} &middot; {{ $vacancy->employment_type ?? '\u2014' }}</div>
+                        <div class="text-sm text-gray-500">{{ $vacancy->department?->name ?? '—' }}</div>
+                        <div class="text-xs text-gray-400 mt-1">{{ $vacancy->location ?? '—' }} &middot; {{ $vacancy->employment_type ?? '—' }}</div>
                         <div class="text-xs text-gray-400">Posted on {{ $vacancy->posted_date->format('M d, Y') }}</div>
                         <a href="{{ route('recruitment.applicants', ['job_vacancy_id' => $vacancy->id]) }}" class="text-blue-600 text-xs mt-2 inline-block">
                             {{ $vacancy->applicants_count }} Applicants

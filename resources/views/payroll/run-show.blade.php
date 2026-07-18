@@ -36,7 +36,7 @@
                 @forelse ($run->payslips as $payslip)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3">{{ $payslip->employee->full_name }}</td>
-                        <td class="px-4 py-3">{{ $payslip->employee->department?->name ?? '\u2014' }}</td>
+                        <td class="px-4 py-3">{{ $payslip->employee->department?->name ?? '—' }}</td>
                         <td class="px-4 py-3">&#8369;{{ number_format($payslip->gross_pay, 2) }}</td>
                         <td class="px-4 py-3">&#8369;{{ number_format($payslip->total_deductions, 2) }}</td>
                         <td class="px-4 py-3 font-medium">&#8369;{{ number_format($payslip->net_pay, 2) }}</td>

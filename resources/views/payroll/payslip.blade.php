@@ -49,19 +49,19 @@
         </div>
         <div class="text-sm">
             <div class="text-gray-500">SSS Number</div>
-            <div class="font-medium">{{ $payslip->employee->sss_number ?? '\u2014' }}</div>
+            <div class="font-medium">{{ $payslip->employee->sss_number ?? '—' }}</div>
         </div>
         <div class="text-sm">
             <div class="text-gray-500">PhilHealth Number</div>
-            <div class="font-medium">{{ $payslip->employee->philhealth_number ?? '\u2014' }}</div>
+            <div class="font-medium">{{ $payslip->employee->philhealth_number ?? '—' }}</div>
         </div>
         <div class="text-sm">
             <div class="text-gray-500">Pag-IBIG Number</div>
-            <div class="font-medium">{{ $payslip->employee->pagibig_number ?? '\u2014' }}</div>
+            <div class="font-medium">{{ $payslip->employee->pagibig_number ?? '—' }}</div>
         </div>
         <div class="text-sm">
             <div class="text-gray-500">TIN Number</div>
-            <div class="font-medium">{{ $payslip->employee->tin_number ?? '\u2014' }}</div>
+            <div class="font-medium">{{ $payslip->employee->tin_number ?? '—' }}</div>
         </div>
     </div>
 

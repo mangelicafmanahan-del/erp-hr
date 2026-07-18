@@ -31,7 +31,7 @@
                     {{ ucfirst($applicant->status) }}
                 </span>
             </h1>
-            <p class="text-gray-500">Applying for {{ $applicant->jobVacancy->title }} &middot; {{ $applicant->jobVacancy->department?->name ?? '\u2014' }}</p>
+            <p class="text-gray-500">Applying for {{ $applicant->jobVacancy->title }} &middot; {{ $applicant->jobVacancy->department?->name ?? '—' }}</p>
         </div>
         <a href="{{ route('recruitment.applicants') }}" class="border rounded-md px-4 py-2 text-sm text-gray-600">Back to Applicants</a>
     </div>
@@ -42,7 +42,7 @@
             <h2 class="font-semibold text-gray-900 mb-4">Applicant Info</h2>
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ $applicant->email }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $applicant->phone ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $applicant->phone ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Applied On</dt><dd>{{ $applicant->applied_at->format('M d, Y') }}</dd></div>
             </dl>
             @if ($applicant->resume_path)
@@ -77,7 +77,7 @@
             @forelse ($applicant->interviews as $interview)
                 <div class="flex justify-between items-start py-2 {{ !$loop->last ? 'border-b' : '' }} text-sm">
                     <div>
-                        <div class="font-medium text-gray-800">{{ $interview->stage ?? 'Interview' }} &middot; {{ $interview->interviewer ?? '\u2014' }}</div>
+                        <div class="font-medium text-gray-800">{{ $interview->stage ?? 'Interview' }} &middot; {{ $interview->interviewer ?? '—' }}</div>
                         <div class="text-gray-500">{{ $interview->feedback ?? 'No feedback recorded.' }}</div>
                     </div>
                     <div class="text-right shrink-0 pl-4">
@@ -147,9 +147,9 @@
 
             @if ($applicant->offer)
                 <div class="text-sm mb-4 pb-4 border-b space-y-1">
-                    <div class="flex justify-between"><span class="text-gray-500">Offered Position</span><span>{{ $applicant->offer->offered_position ?? '\u2014' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Offered Position</span><span>{{ $applicant->offer->offered_position ?? '—' }}</span></div>
                     <div class="flex justify-between"><span class="text-gray-500">Salary Offered</span><span>&#8369;{{ number_format($applicant->offer->salary_offered, 2) }}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Start Date</span><span>{{ optional($applicant->offer->start_date)->format('M d, Y') ?? '\u2014' }}</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Start Date</span><span>{{ optional($applicant->offer->start_date)->format('M d, Y') ?? '—' }}</span></div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-500">Offer Status</span>
                         <span class="text-xs px-2 py-1 rounded-full {{ $applicant->offer->status === 'accepted' ? 'bg-green-100 text-green-700' : ($applicant->offer->status === 'declined' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') }}">

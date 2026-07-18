@@ -33,10 +33,10 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3">{{ $interview->applicant->full_name }}</td>
                         <td class="px-4 py-3">{{ $interview->applicant->jobVacancy->title }}</td>
-                        <td class="px-4 py-3">{{ $interview->stage ?? '\u2014' }}</td>
+                        <td class="px-4 py-3">{{ $interview->stage ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $interview->interview_date->format('M d, Y g:i A') }}</td>
-                        <td class="px-4 py-3">{{ $interview->score ? $interview->score . ' / 5.0' : '\u2014' }}</td>
-                        <td class="px-4 py-3">{{ $interview->result ?? '\u2014' }}</td>
+                        <td class="px-4 py-3">{{ $interview->score ? $interview->score . ' / 5.0' : '—' }}</td>
+                        <td class="px-4 py-3">{{ $interview->result ?? '—' }}</td>
                         <td class="px-4 py-3 text-right">
                             <a href="{{ route('recruitment.applicants.show', $interview->applicant) }}" class="text-blue-600 text-xs">View Applicant</a>
                         </td>

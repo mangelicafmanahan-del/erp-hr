@@ -51,12 +51,12 @@
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">Employee ID</dt><dd>{{ $employee->employee_number }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ $employee->email }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '\u2014' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '—' }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Status</dt><dd>{{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}</dd></div>
             </dl>
 
