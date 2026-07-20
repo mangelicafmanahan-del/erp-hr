@@ -31,11 +31,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // About the Developers - anyone logged in
     Route::get('/about', [AboutController::class, 'show'])->name('about.show');
-    Route::get('/about/edit', [AboutController::class, 'edit'])->name('about.edit');
-    Route::put('/about', [AboutController::class, 'update'])->name('about.update');
-
     // Self-service - any logged in user; controllers scope data to their own
     // employee record internally
     Route::get('/my-profile', [EmployeeController::class, 'myProfile'])->name('my.profile');
@@ -57,6 +53,9 @@ Route::middleware('auth')->group(function () {
     // route in this group, even if they type the URL directly.
     // -----------------------------------------------------------------
     Route::middleware('role:hr_manager,admin')->group(function () {
+
+        Route::get('/about/edit', [AboutController::class, 'edit'])->name('about.edit');
+        Route::put('/about', [AboutController::class, 'update'])->name('about.update');
 
         Route::resource('employees', EmployeeController::class);
         Route::post('/employees/{employee}/documents', [EmployeeController::class, 'storeDocument'])

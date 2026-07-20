@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 class AttendanceController extends Controller
 {
     private const WORKDAY_START = '09:00:00'; // clocking in after this counts as Late
-    private const STANDARD_HOURS = 8;
+    private const WORKDAY_END = '17:00:00'; // clocking out after this counts toward Overtime
 
     /**
      * Attendance Log (4a) - shows every active employee's status for a chosen date
@@ -112,7 +112,15 @@ class AttendanceController extends Controller
         $now = now();
         $timeIn = Carbon::parse($today . ' ' . $record->time_in);
         $hoursWorked = round($timeIn->diffInMinutes($now, true) / 60, 2);
-        $overtime = max(0, round($hoursWorked - self::STANDARD_HOURS, 2));
+
+        // Overtime = time actually worked past the 5PM shift end, not just
+        // "total hours over 8" - someone who clocks in late (say 11AM) and
+        // leaves at 7PM has worked 8 hours but 2 of them were past the shift,
+        // and that's what should be paid as overtime.
+        $workdayEnd = Carbon::parse($today . ' ' . self::WORKDAY_END);
+        $overtime = $now->greaterThan($workdayEnd)
+            ? round($workdayEnd->diffInMinutes($now, true) / 60, 2)
+            : 0;
 
         $record->update([
             'time_out' => $now->format('H:i:s'),

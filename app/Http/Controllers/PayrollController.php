@@ -84,6 +84,16 @@ class PayrollController extends Controller
             ->with('currentSalary')
             ->get();
 
+        $periodStart = \Carbon\Carbon::parse($validated['period_start']);
+        $periodEnd = \Carbon\Carbon::parse($validated['period_end']);
+
+        // Every weekday in the pay period is a day attendance is expected.
+        // Consistent with the "22 working days/month" assumption already
+        // used for the hourly rate below (weekends aren't counted against
+        // anyone; there's nothing to clock in for on a Saturday).
+        $workingDays = collect($periodStart->daysUntil($periodEnd->copy()->addDay()))
+            ->filter(fn ($day) => ! $day->isWeekend());
+
         foreach ($employees as $employee) {
             $basicSalary = (float) ($employee->currentSalary->basic_salary ?? 0);
             $allowance = (float) ($employee->currentSalary->allowance ?? 0);
@@ -98,6 +108,25 @@ class PayrollController extends Controller
             $hourlyRate = $basicSalary > 0 ? $basicSalary / 22 / 8 : 0;
             $overtimePay = round($hourlyRate * 1.25 * $overtimeHours, 2);
 
+            // Absence deduction: any weekday in the period (on or after the
+            // employee's hire date) with no attendance record at all - no
+            // clock-in, no approved leave (leave approval writes an
+            // 'on_leave' row, so those days already count as "attended" and
+            // are correctly excluded here) - is treated as an unpaid absence
+            // and docked at the daily rate.
+            $attendedDates = AttendanceRecord::where('employee_id', $employee->id)
+                ->whereBetween('work_date', [$validated['period_start'], $validated['period_end']])
+                ->pluck('work_date')
+                ->all();
+
+            $absentDays = $workingDays
+                ->filter(fn ($day) => (! $employee->hire_date || $day->greaterThanOrEqualTo($employee->hire_date))
+                    && ! in_array($day->format('Y-m-d'), $attendedDates))
+                ->count();
+
+            $dailyRate = $basicSalary > 0 ? $basicSalary / 22 : 0;
+            $absenceDeduction = round($dailyRate * $absentDays, 2);
+
             $grossPay = $basicSalary + $allowance + $overtimePay;
 
             // Simplified placeholder contribution rates - see note above.
@@ -107,7 +136,7 @@ class PayrollController extends Controller
             $taxableBase = max($grossPay - $sss - $philhealth - $pagibig, 0);
             $withholdingTax = round($taxableBase * 0.10, 2);
 
-            $totalDeductions = $sss + $philhealth + $pagibig + $withholdingTax;
+            $totalDeductions = $sss + $philhealth + $pagibig + $withholdingTax + $absenceDeduction;
             $netPay = $grossPay - $totalDeductions;
 
             $payslip = Payslip::create([
@@ -141,6 +170,9 @@ class PayrollController extends Controller
             PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'deduction', 'description' => 'Pag-IBIG Contribution', 'amount' => $pagibig]);
             if ($withholdingTax > 0) {
                 PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'deduction', 'description' => 'Withholding Tax', 'amount' => $withholdingTax]);
+            }
+            if ($absenceDeduction > 0) {
+                PayslipItem::create(['payslip_id' => $payslip->id, 'type' => 'deduction', 'description' => "Absence ({$absentDays} day(s))", 'amount' => $absenceDeduction]);
             }
         }
 
