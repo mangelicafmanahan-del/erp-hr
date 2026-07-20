@@ -169,18 +169,10 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Upload a document/certification/ID for an employee (1c).
-     * Now callable by the employee themselves (self-service), or by HR for
-     * anyone. This route is moving OUT of the HR-only middleware group -
-     * see the routes patch in this same zip.
+     * Upload a document/certification/ID for an employee (1c)
      */
     public function storeDocument(Request $request, Employee $employee)
     {
-        $user = auth()->user();
-        if ($user->role === 'employee' && $employee->id !== $user->employee_id) {
-            abort(403, 'You can only upload documents for yourself.');
-        }
-
         $request->validate([
             'document_type' => 'required|string|max:255',
             'file' => 'required|file|max:5120|mimes:pdf,jpg,jpeg,png', // 5MB max
@@ -202,7 +194,6 @@ class EmployeeController extends Controller
         return back()->with('success', 'Document uploaded.');
     }
 
-
     public function destroyDocument(EmployeeDocument $document)
     {
         Storage::disk('public')->delete($document->file_path);
@@ -210,6 +201,68 @@ class EmployeeController extends Controller
         $document->delete();
 
         return redirect()->route('employees.show', $employee)->with('success', 'Document removed.');
+    }
+
+    /**
+     * Self-service: an employee replaces their own profile photo.
+     * Same validation/storage/old-file-cleanup as the HR-side store()/update(),
+     * but the employee is resolved from the logged-in account, not a route
+     * parameter — so there's nothing in the request that could target
+     * someone else's record.
+     */
+    public function updateMyPhoto(Request $request)
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $request->validate(['photo' => 'required|image|max:2048']); // 2MB max
+
+        if ($employee->profile_photo_path) {
+            Storage::disk('public')->delete($employee->profile_photo_path);
+        }
+
+        $employee->update([
+            'profile_photo_path' => $request->file('photo')->store('employee-photos', 'public'),
+        ]);
+
+        return back()->with('success', 'Profile photo updated.');
+    }
+    /**
+     * Same validation storage as the HR-side storeDocument(), but the
+     * employee is resolved from the logged-in account rather than a route
+     * parameter, so a user can never upload to someone else's file no
+     * matter what's submitted in the request.
+     */
+    public function storeMyDocument(Request $request)
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $request->validate([
+            'document_type' => 'required|string|max:255',
+            'file' => 'required|file|max:5120|mimes:pdf,jpg,jpeg,png', // 5MB max
+            'issue_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date',
+        ]);
+
+        $path = $request->file('file')->store('employee-documents', 'public');
+
+        EmployeeDocument::create([
+            'employee_id' => $employee->id,
+            'document_type' => $request->input('document_type'),
+            'file_name' => $request->file('file')->getClientOriginalName(),
+            'file_path' => $path,
+            'issue_date' => $request->input('issue_date'),
+            'expiry_date' => $request->input('expiry_date'),
+        ]);
+
+        return back()->with('success', 'Document uploaded.');
     }
 
     /**

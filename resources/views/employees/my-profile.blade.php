@@ -34,7 +34,20 @@
                 </span>
             </h1>
             <p class="text-gray-500">{{ $employee->job_title ?? 'No job title set' }} &middot; {{ $employee->department?->name ?? 'No department' }}</p>
-            <p class="text-xs text-gray-400 mt-1">Personal and employment details are read-only here - contact HR to update them.</p>
+            <p class="text-xs text-gray-400 mt-1">This is a read-only view. Contact HR to update any of this information.</p>
+
+            <form action="{{ route('my.profile.photo') }}" method="POST" enctype="multipart/form-data"
+                  class="flex items-center gap-2 mt-2">
+                @csrf
+                <input type="file" name="photo" accept="image/*" required
+                       class="text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700">
+                <button type="submit" class="text-xs font-medium text-blue-600 hover:text-blue-700">
+                    {{ $employee->profile_photo_path ? 'Change photo' : 'Upload photo' }}
+                </button>
+            </form>
+            @error('photo')
+                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+            @enderror
         </div>
     </div>
 
@@ -44,12 +57,12 @@
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-gray-500">Employee ID</dt><dd>{{ $employee->employee_number }}</dd></div>
                 <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ $employee->email }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '—' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '—' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '—' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '—' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '—' }}</dd></div>
-                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '—' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Phone</dt><dd>{{ $employee->phone_number ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Gender</dt><dd>{{ $employee->gender ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Civil Status</dt><dd>{{ $employee->civil_status ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Date of Birth</dt><dd>{{ optional($employee->date_of_birth)->format('M d, Y') ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Contract Type</dt><dd>{{ $employee->contract_type ?? '\u2014' }}</dd></div>
+                <div class="flex justify-between"><dt class="text-gray-500">Hire Date</dt><dd>{{ optional($employee->hire_date)->format('M d, Y') ?? '\u2014' }}</dd></div>
             </dl>
         </div>
 
@@ -74,11 +87,8 @@
         </div>
     </div>
 
-    {{-- Documents (1c) - NEW: employees can now upload their own --}}
     <div class="bg-white border rounded-lg p-6 mt-6">
-        <h2 class="font-semibold text-gray-900 mb-1">My Documents</h2>
-        <p class="text-xs text-gray-400 mb-4">You can upload documents here. Removing a document requires HR.</p>
-
+        <h2 class="font-semibold text-gray-900 mb-4">My Documents</h2>
         <div class="space-y-2 mb-6">
             @forelse ($employee->documents as $doc)
                 <div class="flex items-center justify-between text-sm border rounded-md px-4 py-2">
@@ -89,11 +99,11 @@
                     <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="text-blue-600">Download</a>
                 </div>
             @empty
-                <p class="text-sm text-gray-400">No documents on file yet.</p>
+                <p class="text-sm text-gray-400">No documents on file.</p>
             @endforelse
         </div>
 
-        <form action="{{ route('employees.documents.store', $employee) }}" method="POST" enctype="multipart/form-data"
+        <form action="{{ route('my.documents.store') }}" method="POST" enctype="multipart/form-data"
               class="flex flex-wrap items-end gap-3 border-t pt-4">
             @csrf
             <div>

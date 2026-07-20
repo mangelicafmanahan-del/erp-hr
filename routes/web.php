@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function () {
     // Self-service - any logged in user; controllers scope data to their own
     // employee record internally
     Route::get('/my-profile', [EmployeeController::class, 'myProfile'])->name('my.profile');
+    Route::post('/my-profile/photo', [EmployeeController::class, 'updateMyPhoto'])->name('my.profile.photo');
+    Route::post('/my-documents', [EmployeeController::class, 'storeMyDocument'])->name('my.documents.store');
     Route::get('/my-payslips', [PayrollController::class, 'myPayslips'])->name('my.payslips');
     Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslips.show');
 
@@ -47,9 +49,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/{employee}/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clockout');
     Route::get('/attendance/leave', [AttendanceController::class, 'leaveIndex'])->name('attendance.leave');
     Route::post('/attendance/leave', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave.store');
-
-    Route::post('/employees/{employee}/documents', [EmployeeController::class, 'storeDocument'])
-            ->name('employees.documents.store');
 
     // -----------------------------------------------------------------
     // HR-only - admin and hr_manager roles ONLY (Employee Records, Payroll,
@@ -60,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:hr_manager,admin')->group(function () {
 
         Route::resource('employees', EmployeeController::class);
+        Route::post('/employees/{employee}/documents', [EmployeeController::class, 'storeDocument'])
+            ->name('employees.documents.store');
         Route::delete('/employees/documents/{document}', [EmployeeController::class, 'destroyDocument'])
             ->name('employees.documents.destroy');
         Route::post('/employees/{employee}/history', [EmployeeController::class, 'storeEmploymentHistory'])
