@@ -23,9 +23,7 @@ class AttendanceRecord extends Model
 
     protected function casts(): array
     {
-        return [
-            'work_date' => 'date',
-        ];
+        return [];
     }
 
     public function employee(): BelongsTo

@@ -85,7 +85,7 @@ class AttendanceController extends Controller
             [
                 'time_in' => $now->format('H:i:s'),
                 'status' => $isLate ? 'late' : 'present',
-                'late_minutes' => $isLate ? $now->diffInMinutes(Carbon::parse($today . ' ' . self::WORKDAY_START)) : 0,
+                'late_minutes' => $isLate ? (int) round($now->diffInMinutes(Carbon::parse($today . ' ' . self::WORKDAY_START), true)) : 0,
             ]
         );
 
@@ -111,7 +111,7 @@ class AttendanceController extends Controller
 
         $now = now();
         $timeIn = Carbon::parse($today . ' ' . $record->time_in);
-        $hoursWorked = round($timeIn->diffInMinutes($now) / 60, 2);
+        $hoursWorked = round($timeIn->diffInMinutes($now, true) / 60, 2);
         $overtime = max(0, round($hoursWorked - self::STANDARD_HOURS, 2));
 
         $record->update([
