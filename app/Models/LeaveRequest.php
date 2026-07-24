@@ -20,6 +20,7 @@ class LeaveRequest extends Model
         'status',
         'approved_by',
         'approved_at',
+        'returned_at',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class LeaveRequest extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'approved_at' => 'datetime',
+            'returned_at' => 'datetime',
         ];
     }
 

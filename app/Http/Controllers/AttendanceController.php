@@ -10,6 +10,7 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -172,6 +173,7 @@ class AttendanceController extends Controller
                 ->where('status', 'approved')
                 ->whereDate('start_date', '<=', today())
                 ->whereDate('end_date', '>=', today())
+                ->whereNull('returned_at')
                 ->orderBy('end_date')
                 ->first();
         }
@@ -249,43 +251,55 @@ class AttendanceController extends Controller
         $today = today();
 
         if ($leaveRequest->status !== 'approved'
+            || $leaveRequest->returned_at !== null
             || $leaveRequest->start_date->isAfter($today)
             || $leaveRequest->end_date->isBefore($today)) {
-            return back()->with('success', 'This leave request is not currently active.');
+            return back()->with('success', 'This leave request is no longer an active leave that can be returned from.');
         }
 
-        // Restore unused future leave days to the employee's balance.
-        $unusedDays = $today->diffInDays($leaveRequest->end_date);
-        if ($unusedDays > 0) {
-            $balance = LeaveBalance::where('employee_id', $leaveRequest->employee_id)
-                ->where('leave_type_id', $leaveRequest->leave_type_id)
-                ->where('year', $leaveRequest->start_date->year)
-                ->first();
+        DB::transaction(function () use ($leaveRequest, $today) {
+            // Restore unused future leave days exactly once.
+            $unusedDays = $today->diffInDays($leaveRequest->end_date);
 
-            if ($balance) {
-                $balance->decrement('used_days', min($unusedDays, $balance->used_days));
+            if ($unusedDays > 0) {
+                $balance = LeaveBalance::where('employee_id', $leaveRequest->employee_id)
+                    ->where('leave_type_id', $leaveRequest->leave_type_id)
+                    ->where('year', $leaveRequest->start_date->year)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($balance) {
+                    $balance->decrement('used_days', min($unusedDays, $balance->used_days));
+                }
+
+                AttendanceRecord::where('employee_id', $leaveRequest->employee_id)
+                    ->whereDate('work_date', '>', $today)
+                    ->whereDate('work_date', '<=', $leaveRequest->end_date)
+                    ->where('status', 'on_leave')
+                    ->delete();
             }
 
-            AttendanceRecord::where('employee_id', $leaveRequest->employee_id)
-                ->whereDate('work_date', '>', $today)
-                ->whereDate('work_date', '<=', $leaveRequest->end_date)
-                ->where('status', 'on_leave')
-                ->delete();
-        }
+            // Permanently record the actual return so the same leave cannot
+            // be returned from a second time.
+            $leaveRequest->update([
+                'returned_at' => now(),
+            ]);
 
-        // Today's record becomes the employee's return-to-work record.
-        $now = now();
-        $isLate = $now->format('H:i:s') > self::WORKDAY_START;
-        AttendanceRecord::updateOrCreate(
-            ['employee_id' => $leaveRequest->employee_id, 'work_date' => $today->format('Y-m-d')],
-            [
-                'time_in' => $now->format('H:i:s'),
-                'status' => $isLate ? 'late' : 'present',
-                'late_minutes' => $isLate
-                    ? (int) round($now->diffInMinutes(Carbon::parse($today->format('Y-m-d') . ' ' . self::WORKDAY_START), true))
-                    : 0,
-            ]
-        );
+            // Today's record becomes the employee's return-to-work record.
+            $now = now();
+            $isLate = $now->format('H:i:s') > self::WORKDAY_START;
+
+            AttendanceRecord::updateOrCreate(
+                ['employee_id' => $leaveRequest->employee_id, 'work_date' => $today->format('Y-m-d')],
+                [
+                    'time_in' => $now->format('H:i:s'),
+                    'status' => $isLate ? 'late' : 'present',
+                    'late_minutes' => $isLate
+                        ? (int) round($now->diffInMinutes(Carbon::parse($today->format('Y-m-d') . ' ' . self::WORKDAY_START), true))
+                        : 0,
+                ]
+            );
+        });
 
         return back()->with('success', 'You have been marked as back at work today.');
     }

@@ -127,6 +127,7 @@ class Employee extends Model
 
         return $this->leaveRequests()
             ->where('status', 'approved')
+            ->whereNull('returned_at')
             ->whereDate('start_date', '<=', today())
             ->whereDate('end_date', '>=', today())
             ->exists()

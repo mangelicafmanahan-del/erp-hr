@@ -93,6 +93,10 @@
                    class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('my.payslips') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
                     My Payslips
                 </a>
+                <a href="{{ route('my.job-offers') }}"
+                   class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('my.job-offers') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                    Job Offers
+                </a>
                 <a href="{{ route('attendance.log') }}"
                    class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('attendance.log') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
                     Attendance Log

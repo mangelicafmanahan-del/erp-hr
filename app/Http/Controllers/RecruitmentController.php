@@ -11,6 +11,7 @@ use App\Models\JobVacancy;
 use App\Models\OnboardingTask;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class RecruitmentController extends Controller
 {
@@ -287,6 +288,15 @@ class RecruitmentController extends Controller
     {
         $request->validate(['status' => 'required|in:accepted,declined']);
 
+        $offer->load('applicant');
+
+        // If the applicant is already an employee, the employee must make
+        // the decision from their own employee account. HR cannot accept or
+        // decline the offer on the employee's behalf.
+        if ($offer->applicant?->employee_id) {
+            return back()->with('success', 'This offer is linked to an existing employee account. The employee must accept or decline it from Job Offers.');
+        }
+
         $offer->update(['status' => $request->input('status')]);
         $applicant = $offer->applicant;
 
@@ -403,5 +413,89 @@ class RecruitmentController extends Controller
             ->paginate(15);
 
         return view('recruitment.offers', compact('offers'));
+    }
+
+    /**
+     * Employee self-service: view job offers linked to the employee's
+     * existing employee record.
+     */
+    public function myOffers()
+    {
+        $employee = auth()->user()->employee;
+
+        $offers = $employee
+            ? JobOffer::with('applicant.jobVacancy')
+                ->whereHas('applicant', fn ($query) => $query->where('employee_id', $employee->id))
+                ->orderByDesc('offer_date')
+                ->get()
+            : collect();
+
+        return view('recruitment.my-offers', compact('offers', 'employee'));
+    }
+
+    /**
+     * Employee self-service: accept or decline only their own pending offer.
+     */
+    public function respondToMyOffer(Request $request, JobOffer $offer)
+    {
+        $request->validate([
+            'status' => 'required|in:accepted,declined',
+        ]);
+
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(403, 'Your account is not linked to an employee record.');
+        }
+
+        $result = DB::transaction(function () use ($request, $offer, $employee) {
+            $lockedOffer = JobOffer::with('applicant')
+                ->whereKey($offer->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $lockedOffer->applicant || $lockedOffer->applicant->employee_id !== $employee->id) {
+                abort(403, 'You can only respond to your own job offers.');
+            }
+
+            if ($lockedOffer->status !== 'pending') {
+                return 'already_' . $lockedOffer->status;
+            }
+
+            $status = $request->input('status');
+            $lockedOffer->update(['status' => $status]);
+
+            $lockedOffer->applicant->update([
+                'status' => $status === 'accepted' ? 'hired' : 'rejected',
+            ]);
+
+            if ($status === 'accepted' && $lockedOffer->applicant->onboardingTasks()->count() === 0) {
+                $defaultTasks = [
+                    'Offer accepted by candidate',
+                    'Personal information collected',
+                    'Documents submitted',
+                    'Background verification',
+                    'IT account setup',
+                    'Welcome & orientation schedule',
+                ];
+
+                foreach ($defaultTasks as $task) {
+                    OnboardingTask::create([
+                        'applicant_id' => $lockedOffer->applicant->id,
+                        'task_name' => $task,
+                        'is_completed' => $task === 'Offer accepted by candidate',
+                        'completed_at' => $task === 'Offer accepted by candidate' ? now() : null,
+                    ]);
+                }
+            }
+
+            return $status;
+        });
+
+        if (str_starts_with($result, 'already_')) {
+            return back()->with('success', 'This job offer has already been ' . str_replace('already_', '', $result) . '.');
+        }
+
+        return back()->with('success', 'Your job offer has been ' . $result . '.');
     }
 }

@@ -159,22 +159,29 @@
                 </div>
 
                 @if ($applicant->offer->status === 'pending')
-                    <div class="flex gap-2">
-                        <form action="{{ route('recruitment.offers.status', $applicant->offer) }}" method="POST" class="flex-1">
-                            @csrf
-                            <input type="hidden" name="status" value="accepted">
-                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-md">
-                                Mark Accepted
-                            </button>
-                        </form>
-                        <form action="{{ route('recruitment.offers.status', $applicant->offer) }}" method="POST" class="flex-1">
-                            @csrf
-                            <input type="hidden" name="status" value="declined">
-                            <button type="submit" class="w-full border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium px-4 py-2 rounded-md">
-                                Mark Declined
-                            </button>
-                        </form>
-                    </div>
+                    @if ($applicant->employee_id)
+                        <div class="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
+                            This offer has been sent to the existing employee account.
+                            The employee must review and accept or decline the offer from the <strong>Job Offers</strong> page.
+                        </div>
+                    @else
+                        <div class="flex gap-2">
+                            <form action="{{ route('recruitment.offers.status', $applicant->offer) }}" method="POST" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="status" value="accepted">
+                                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                                    Mark Accepted
+                                </button>
+                            </form>
+                            <form action="{{ route('recruitment.offers.status', $applicant->offer) }}" method="POST" class="flex-1">
+                                @csrf
+                                <input type="hidden" name="status" value="declined">
+                                <button type="submit" class="w-full border border-red-300 text-red-600 hover:bg-red-50 text-sm font-medium px-4 py-2 rounded-md">
+                                    Mark Declined
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 @endif
             @else
                 <p class="text-sm text-gray-400 mb-4">No offer issued yet.</p>

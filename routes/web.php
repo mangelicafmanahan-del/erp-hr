@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/my-profile/payment-preferences', [EmployeeController::class, 'updatePaymentPreferences'])->name('my.profile.payment-preferences');
     Route::post('/my-documents', [EmployeeController::class, 'storeMyDocument'])->name('my.documents.store');
     Route::get('/my-payslips', [PayrollController::class, 'myPayslips'])->name('my.payslips');
+    Route::get('/my-job-offers', [RecruitmentController::class, 'myOffers'])->name('my.job-offers');
+    Route::post('/my-job-offers/{offer}/respond', [RecruitmentController::class, 'respondToMyOffer'])->name('my.job-offers.respond');
     Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslips.show');
 
     Route::get('/attendance', [AttendanceController::class, 'log'])->name('attendance.log');
