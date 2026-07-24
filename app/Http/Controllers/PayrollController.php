@@ -92,7 +92,7 @@ class PayrollController extends Controller
         // used for the hourly rate below (weekends aren't counted against
         // anyone; there's nothing to clock in for on a Saturday).
         $workingDays = collect($periodStart->daysUntil($periodEnd->copy()->addDay()))
-            ->filter(fn ($day) => ! $day->isWeekend());
+            ->filter(fn (\Carbon\Carbon $day) => ! $day->isWeekend());
 
         foreach ($employees as $employee) {
             $basicSalary = (float) ($employee->currentSalary->basic_salary ?? 0);
@@ -120,7 +120,7 @@ class PayrollController extends Controller
                 ->all();
 
             $absentDays = $workingDays
-                ->filter(fn ($day) => (! $employee->hire_date || $day->greaterThanOrEqualTo($employee->hire_date))
+                ->filter(fn (\Carbon\Carbon $day) => (! $employee->hire_date || $day->greaterThanOrEqualTo($employee->hire_date))
                     && ! in_array($day->format('Y-m-d'), $attendedDates))
                 ->count();
 
