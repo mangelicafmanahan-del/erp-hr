@@ -82,8 +82,8 @@
                                     'terminated' => 'bg-red-100 text-red-700',
                                 ];
                             @endphp
-                            <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->employment_status] ?? 'bg-gray-100' }}">
-                                {{ ucfirst(str_replace('_', ' ', $employee->employment_status)) }}
+                            <span class="text-xs px-2 py-1 rounded-full {{ $statusColors[$employee->current_work_status] ?? 'bg-gray-100' }}">
+                                {{ ucfirst(str_replace('_', ' ', $employee->current_work_status)) }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-gray-500">{{ $employee->email }}</td>

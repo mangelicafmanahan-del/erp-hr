@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
 use App\Models\EmploymentHistory;
+use App\Models\LeaveRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -37,13 +38,32 @@ class EmployeeController extends Controller
         }
 
         if ($status = $request->input('employment_status')) {
-            $query->where('employment_status', $status);
+            if ($status === 'on_leave') {
+                $query->where('employment_status', 'active')
+                    ->whereHas('leaveRequests', function ($q) {
+                        $q->where('status', 'approved')
+                            ->whereDate('start_date', '<=', today())
+                            ->whereDate('end_date', '>=', today());
+                    });
+            } elseif ($status === 'active') {
+                $query->where('employment_status', 'active')
+                    ->whereDoesntHave('leaveRequests', function ($q) {
+                        $q->where('status', 'approved')
+                            ->whereDate('start_date', '<=', today())
+                            ->whereDate('end_date', '>=', today());
+                    });
+            } else {
+                $query->where('employment_status', $status);
+            }
         }
 
         // FIX: was orderBy('last_name') - regressed back to alphabetical
         // sorting during the auth/RBAC rebuild. Restoring the successive
         // employee_id ordering you asked for earlier.
         $employees = $query->orderBy('id')->paginate(10)->withQueryString();
+        $employees->getCollection()->each(function ($employee) {
+            $employee->setAttribute('current_work_status', $employee->current_work_status);
+        });
         $departments = Department::orderBy('name')->get();
 
         return view('employees.index', compact('employees', 'departments'));
@@ -357,6 +377,7 @@ class EmployeeController extends Controller
             'job_title' => $employee->job_title,
             'department' => $employee->department?->name,
             'employment_status' => $employee->employment_status,
+            'current_work_status' => $employee->current_work_status,
             'email' => $employee->email,
             'phone_number' => $employee->phone_number,
             'gender' => $employee->gender,

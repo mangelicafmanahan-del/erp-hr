@@ -33,6 +33,10 @@ class Employee extends Model
         'philhealth_number',
         'pagibig_number',
         'tin_number',
+        'payment_method',
+        'bank_name',
+        'bank_account_name',
+        'bank_account_number',
         'emergency_contact_name',
         'emergency_contact_relationship',
         'emergency_contact_number',
@@ -110,4 +114,24 @@ class Employee extends Model
         $parts = array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix]);
         return implode(' ', $parts);
     }
+
+    /**
+     * Current work status is separate from employment_status.
+     * An employed person can remain Active while currently being On Leave.
+     */
+    public function getCurrentWorkStatusAttribute(): string
+    {
+        if ($this->employment_status !== 'active') {
+            return $this->employment_status;
+        }
+
+        return $this->leaveRequests()
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', today())
+            ->whereDate('end_date', '>=', today())
+            ->exists()
+                ? 'on_leave'
+                : 'active';
+    }
 }
+

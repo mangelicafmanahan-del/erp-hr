@@ -58,7 +58,7 @@ class RecruitmentController extends Controller
         $vacancyQuery = JobVacancy::with('department')->withCount('applicants');
 
         if (! $isHr) {
-            $vacancyQuery->where('status', 'open')
+            $vacancyQuery->whereRaw('LOWER(status) = ?', ['open'])
                 ->where(function ($query) {
                     $query->whereNull('closing_date')
                         ->orWhereDate('closing_date', '>=', today());
@@ -90,7 +90,7 @@ class RecruitmentController extends Controller
             return back()->with('success', 'Your account is not linked to an employee record yet. Contact HR before applying.');
         }
 
-        if ($vacancy->status !== 'open' || ($vacancy->closing_date && $vacancy->closing_date->isBefore(today()))) {
+        if (strtolower((string) $vacancy->status) !== 'open' || ($vacancy->closing_date && $vacancy->closing_date->isBefore(today()))) {
             return back()->with('success', 'This vacancy is no longer accepting applications.');
         }
 

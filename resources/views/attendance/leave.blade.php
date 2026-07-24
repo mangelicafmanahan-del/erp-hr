@@ -15,6 +15,24 @@
         <p class="text-gray-500">File leave requests and track approval status.</p>
     </div>
 
+    @if (auth()->user()->role === 'employee' && $activeLeave)
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h2 class="font-semibold text-amber-900">You are currently on approved leave</h2>
+                <p class="text-sm text-amber-800 mt-1">
+                    {{ $activeLeave->leaveType->name }} · {{ $activeLeave->start_date->format('M d, Y') }} – {{ $activeLeave->end_date->format('M d, Y') }}
+                </p>
+                <p class="text-xs text-amber-700 mt-1">If you have returned to work early, use the button to record your actual return today.</p>
+            </div>
+            <form action="{{ route('attendance.leave.return', $activeLeave) }}" method="POST" onsubmit="return confirm('Confirm that you are back at work today?');">
+                @csrf
+                <button type="submit" class="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                    I Am Back at Work
+                </button>
+            </form>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {{-- File a new request --}}
         <div class="bg-white border rounded-lg p-6">

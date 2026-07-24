@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/{employee}/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clockout');
     Route::get('/attendance/leave', [AttendanceController::class, 'leaveIndex'])->name('attendance.leave');
     Route::post('/attendance/leave', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave.store');
+    Route::post('/attendance/leave/{leaveRequest}/return', [AttendanceController::class, 'returnFromLeave'])->name('attendance.leave.return');
 
     // Open job opportunities are visible to all authenticated users.
     // Only HR/Admin routes inside the role group can create/manage vacancies.
