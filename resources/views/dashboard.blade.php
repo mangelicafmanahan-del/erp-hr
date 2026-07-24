@@ -1,36 +1,46 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
-@section('breadcrumb')
-    <span class="text-gray-600">Home</span>
-@endsection
+@section('breadcrumb')<span class="text-gray-600">Dashboard</span>@endsection
 
 @section('content')
-    <h1 class="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
-    <p class="text-gray-500 mb-6">Welcome back! Here's a quick summary.</p>
+    @php $isHr = in_array(auth()->user()->role, ['admin', 'hr_manager']); @endphp
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white rounded-lg border p-5">
-            <div class="text-sm text-gray-500">Total Employees</div>
-            <div class="text-3xl font-bold text-gray-900 mt-1">{{ \App\Models\Employee::count() }}</div>
+    @if ($isHr)
+        <div class="flex items-start justify-between mb-6">
+            <div><h1 class="text-2xl font-bold text-gray-900">Dashboard</h1><p class="text-gray-500">Here's an overview of your HR operations.</p></div>
+            <a href="{{ route('payroll.runs.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">Quick Action: Run Payroll</a>
         </div>
-        <div class="bg-white rounded-lg border p-5">
-            <div class="text-sm text-gray-500">Active Employees</div>
-            <div class="text-3xl font-bold text-gray-900 mt-1">{{ \App\Models\Employee::where('employment_status', 'active')->count() }}</div>
-        </div>
-        <div class="bg-white rounded-lg border p-5">
-            <div class="text-sm text-gray-500">Departments</div>
-            <div class="text-3xl font-bold text-gray-900 mt-1">{{ \App\Models\Department::count() }}</div>
-        </div>
-    </div>
 
-    @if (in_array(auth()->user()->role, ['admin', 'hr_manager']))
-        <div class="mt-8 rounded-lg border bg-white p-5">
-            <a href="{{ route('employees.index') }}" class="text-blue-600 font-medium text-sm">Go to Employee Directory &rarr;</a>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+            <a href="{{ route('employees.index') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Total Employees</div><div class="text-2xl font-bold mt-2">{{ number_format($totalEmployees) }}</div><div class="text-xs text-blue-600 mt-2">View Employee Records →</div></a>
+            <a href="{{ route('payroll.dashboard') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Total Payroll</div><div class="text-2xl font-bold mt-2">₱{{ number_format($totalPayroll, 2) }}</div><div class="text-xs text-blue-600 mt-2">View Payroll Dashboard →</div></a>
+            <a href="{{ route('attendance.log') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Present Today</div><div class="text-2xl font-bold mt-2">{{ number_format($presentToday) }}</div><div class="text-xs text-blue-600 mt-2">View Attendance Log →</div></a>
+            <a href="{{ route('attendance.leave') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">On Leave Today</div><div class="text-2xl font-bold mt-2">{{ number_format($onLeaveToday) }}</div><div class="text-xs text-blue-600 mt-2">View Leave Requests →</div></a>
+            <a href="{{ route('recruitment.vacancies') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Open Positions</div><div class="text-2xl font-bold mt-2">{{ number_format($openPositions) }}</div><div class="text-xs text-blue-600 mt-2">View Job Vacancies →</div></a>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            <a href="{{ route('employees.index') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="flex justify-between mb-4"><h2 class="font-semibold">Employee Distribution</h2><span class="text-blue-600 text-sm">View →</span></div>@forelse($departmentDistribution as $department => $count)<div class="flex justify-between text-sm py-2 border-b last:border-b-0"><span>{{ $department }}</span><span class="font-medium">{{ $count }}</span></div>@empty<p class="text-sm text-gray-400">No employee data yet.</p>@endforelse</a>
+            <a href="{{ route('payroll.dashboard') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="flex justify-between mb-4"><h2 class="font-semibold">Payroll Overview</h2><span class="text-blue-600 text-sm">View →</span></div>@forelse($payrollOverview as $run)<div class="flex justify-between text-sm py-2 border-b last:border-b-0"><span>{{ $run->period_end?->format('M Y') ?? 'Payroll Run' }}</span><span class="font-medium">₱{{ number_format($run->payslips_sum_net_pay ?? 0, 2) }}</span></div>@empty<p class="text-sm text-gray-400">No payroll runs yet.</p>@endforelse</a>
+            <a href="{{ route('attendance.log') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="flex justify-between mb-4"><h2 class="font-semibold">Attendance Overview</h2><span class="text-blue-600 text-sm">View →</span></div><div class="grid grid-cols-3 gap-3 text-center"><div><div class="text-2xl font-bold text-green-600">{{ $attendanceOverview['present'] }}</div><div class="text-xs text-gray-500">Present</div></div><div><div class="text-2xl font-bold text-amber-600">{{ $attendanceOverview['late'] }}</div><div class="text-xs text-gray-500">Late</div></div><div><div class="text-2xl font-bold text-blue-600">{{ $attendanceOverview['on_leave'] }}</div><div class="text-xs text-gray-500">On Leave</div></div></div></a>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+            <a href="{{ route('attendance.leave') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="flex justify-between mb-4"><h2 class="font-semibold">Recent Leave Requests</h2><span class="text-blue-600 text-sm">View All →</span></div>@forelse($leaveRequests as $request)<div class="flex justify-between items-center py-2 border-b last:border-b-0"><div><div class="text-sm font-medium">{{ $request->employee?->full_name ?? 'Unknown Employee' }}</div><div class="text-xs text-gray-500">{{ $request->leaveType?->name ?? 'Leave' }}</div></div><span class="text-xs px-2 py-1 rounded-full {{ $request->status === 'approved' ? 'bg-green-100 text-green-700' : ($request->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') }}">{{ ucfirst($request->status) }}</span></div>@empty<p class="text-sm text-gray-400">No leave requests yet.</p>@endforelse</a>
+            <a href="{{ route('recruitment.dashboard') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="flex justify-between mb-4"><h2 class="font-semibold">Recruitment Pipeline</h2><span class="text-blue-600 text-sm">View →</span></div>@foreach($recruitmentPipeline as $stage => $count)<div class="flex justify-between text-sm py-2 border-b last:border-b-0"><span>{{ $stage }}</span><span class="font-medium">{{ $count }}</span></div>@endforeach</a>
+            <div class="bg-white border rounded-lg p-5"><h2 class="font-semibold mb-4">Recent Activities</h2>@foreach($recentActivities as $activity)<a href="{{ route($activity['route']) }}" class="flex justify-between py-2 border-b last:border-b-0 text-sm hover:text-blue-600"><span>{{ $activity['label'] }}</span><span class="font-medium">{{ $activity['count'] }}</span></a>@endforeach</div>
         </div>
     @else
-        <div class="mt-8 rounded-lg border bg-white p-5">
-            <a href="{{ route('my.profile') }}" class="text-blue-600 font-medium text-sm">Go to My Profile &rarr;</a>
+        <div class="mb-6"><h1 class="text-2xl font-bold text-gray-900">Welcome back, {{ auth()->user()->name }}!</h1><p class="text-gray-500">Here is your personal HR self-service overview.</p></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <a href="{{ route('attendance.log') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Today's Attendance</div><div class="text-xl font-bold mt-2">{{ $myAttendance?->status ? ucfirst(str_replace('_', ' ', $myAttendance->status)) : 'Not Clocked In' }}</div><div class="text-xs text-blue-600 mt-2">Open Attendance →</div></a>
+            <a href="{{ route('my.payslips') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">My Payslips</div><div class="text-xl font-bold mt-2">View Payroll History</div><div class="text-xs text-blue-600 mt-2">Open My Payslips →</div></a>
+            <a href="{{ route('recruitment.vacancies') }}" class="bg-white border rounded-lg p-5 hover:border-blue-400 transition"><div class="text-sm text-gray-500">Open Job Opportunities</div><div class="text-xl font-bold mt-2">{{ $openVacancies->count() }}</div><div class="text-xs text-blue-600 mt-2">Explore Positions →</div></a>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white border rounded-lg p-5"><div class="flex justify-between mb-4"><h2 class="font-semibold">My Recent Applications</h2><a href="{{ route('recruitment.vacancies') }}" class="text-blue-600 text-sm">View Opportunities →</a></div>@forelse($myApplications as $application)<div class="flex justify-between py-3 border-b last:border-b-0"><div><div class="font-medium">{{ $application->jobVacancy?->title ?? 'Vacancy' }}</div><div class="text-xs text-gray-500">Applied {{ $application->applied_at?->format('M d, Y') }}</div></div><span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">{{ ucfirst($application->status) }}</span></div>@empty<p class="text-sm text-gray-400">You have not applied for a vacancy yet.</p>@endforelse</div>
+            <div class="bg-white border rounded-lg p-5"><div class="flex justify-between mb-4"><h2 class="font-semibold">My Recent Leave Requests</h2><a href="{{ route('attendance.leave') }}" class="text-blue-600 text-sm">View →</a></div>@forelse($myLeaveRequests as $request)<div class="flex justify-between py-3 border-b last:border-b-0"><div><div class="font-medium">{{ $request->leaveType?->name ?? 'Leave' }}</div><div class="text-xs text-gray-500">{{ $request->start_date?->format('M d, Y') }} – {{ $request->end_date?->format('M d, Y') }}</div></div><span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ ucfirst($request->status) }}</span></div>@empty<p class="text-sm text-gray-400">No leave requests yet.</p>@endforelse</div>
         </div>
     @endif
 @endsection

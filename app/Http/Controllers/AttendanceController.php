@@ -46,6 +46,15 @@ class AttendanceController extends Controller
         $employees = $query->orderBy('last_name')->paginate(10)->withQueryString();
         $departments = Department::orderBy('name')->get();
 
+        // HR/Admin accounts are also employees. Give every linked account a
+        // personal attendance card while preserving team-wide visibility for HR.
+        $myEmployee = $user->employee;
+        $myAttendance = $myEmployee
+            ? AttendanceRecord::where('employee_id', $myEmployee->id)
+                ->where('work_date', $date)
+                ->first()
+            : null;
+
         // Monthly summary for the selected date's month (4d)
         $monthStart = Carbon::parse($date)->startOfMonth();
         $monthEnd = Carbon::parse($date)->endOfMonth();
@@ -63,7 +72,7 @@ class AttendanceController extends Controller
             'total_overtime' => $monthRecords->sum('overtime_hours'),
         ];
 
-        return view('attendance.log', compact('employees', 'departments', 'date', 'summary'));
+        return view('attendance.log', compact('employees', 'departments', 'date', 'summary', 'myEmployee', 'myAttendance'));
     }
 
     /**

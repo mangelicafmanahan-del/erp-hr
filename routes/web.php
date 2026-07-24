@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
@@ -27,15 +28,14 @@ Route::middleware('auth')->group(function () {
         return redirect('/dashboard');
     });
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/about', [AboutController::class, 'show'])->name('about.show');
     // Self-service - any logged in user; controllers scope data to their own
     // employee record internally
     Route::get('/my-profile', [EmployeeController::class, 'myProfile'])->name('my.profile');
     Route::post('/my-profile/photo', [EmployeeController::class, 'updateMyPhoto'])->name('my.profile.photo');
+    Route::post('/my-profile/payment-preferences', [EmployeeController::class, 'updatePaymentPreferences'])->name('my.profile.payment-preferences');
     Route::post('/my-documents', [EmployeeController::class, 'storeMyDocument'])->name('my.documents.store');
     Route::get('/my-payslips', [PayrollController::class, 'myPayslips'])->name('my.payslips');
     Route::get('/payroll/payslips/{payslip}', [PayrollController::class, 'showPayslip'])->name('payroll.payslips.show');
@@ -45,6 +45,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/attendance/{employee}/clock-out', [AttendanceController::class, 'clockOut'])->name('attendance.clockout');
     Route::get('/attendance/leave', [AttendanceController::class, 'leaveIndex'])->name('attendance.leave');
     Route::post('/attendance/leave', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave.store');
+
+    // Open job opportunities are visible to all authenticated users.
+    // Only HR/Admin routes inside the role group can create/manage vacancies.
+    Route::get('/recruitment/vacancies', [RecruitmentController::class, 'vacancies'])->name('recruitment.vacancies');
+    Route::post('/recruitment/vacancies/{vacancy}/apply', [RecruitmentController::class, 'applyToVacancy'])->name('recruitment.vacancies.apply');
 
     // -----------------------------------------------------------------
     // HR-only - admin and hr_manager roles ONLY (Employee Records, Payroll,
@@ -77,7 +82,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/payroll/runs/{run}', [PayrollController::class, 'showRun'])->name('payroll.runs.show');
 
         Route::get('/recruitment', [RecruitmentController::class, 'dashboard'])->name('recruitment.dashboard');
-        Route::get('/recruitment/vacancies', [RecruitmentController::class, 'vacancies'])->name('recruitment.vacancies');
         Route::post('/recruitment/vacancies', [RecruitmentController::class, 'storeVacancy'])->name('recruitment.vacancies.store');
         Route::post('/recruitment/vacancies/{vacancy}/close', [RecruitmentController::class, 'closeVacancy'])->name('recruitment.vacancies.close');
         Route::get('/recruitment/applicants', [RecruitmentController::class, 'applicants'])->name('recruitment.applicants');

@@ -70,7 +70,6 @@ class PayrollController extends Controller
         $validated = $request->validate([
             'period_start' => 'required|date',
             'period_end' => 'required|date|after_or_equal:period_start',
-            'payment_method' => 'required|in:Bank Transfer,Cash,Check',
         ]);
 
         $run = PayrollRun::create([
@@ -152,7 +151,7 @@ class PayrollController extends Controller
                 'withholding_tax' => $withholdingTax,
                 'total_deductions' => $totalDeductions,
                 'net_pay' => $netPay,
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $employee->payment_method ?: 'Check',
             ]);
 
             // Itemized breakdown (2a) - what actually renders on the Payslip Detail page

@@ -35,17 +35,9 @@
             <label class="text-sm text-gray-600">Period End *</label>
             <input type="date" name="period_end" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
         </div>
-        <div>
-            <label class="text-sm text-gray-600">Payout Method *</label>
-            <select name="payment_method" required class="w-full border rounded-md px-3 py-2 text-sm mt-1">
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Cash">Cash</option>
-                <option value="Check">Check</option>
-            </select>
-        </div>
 
         <p class="text-xs text-gray-400">
-            Note: only employees with an <strong>active</strong> status and a salary set (from their profile page)
+            Note: each employee's saved payment preference is used automatically. If no preference is set, the default payout method is <strong>Check</strong>. Only employees with an <strong>active</strong> status and a salary set (from their profile page)
             will be included. Employees without a salary structure will be skipped with &#8369;0 pay.
         </p>
 

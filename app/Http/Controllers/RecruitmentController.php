@@ -52,13 +52,66 @@ class RecruitmentController extends Controller
      */
     public function vacancies()
     {
-        $vacancies = JobVacancy::with('department')->withCount('applicants')
-            ->orderByDesc('posted_date')
-            ->paginate(10);
+        $user = auth()->user();
+        $isHr = in_array($user->role, ['admin', 'hr_manager']);
 
-        $departments = Department::orderBy('name')->get();
+        $vacancyQuery = JobVacancy::with('department')->withCount('applicants');
 
-        return view('recruitment.vacancies', compact('vacancies', 'departments'));
+        if (! $isHr) {
+            $vacancyQuery->where('status', 'open')
+                ->where(function ($query) {
+                    $query->whereNull('closing_date')
+                        ->orWhereDate('closing_date', '>=', today());
+                });
+        }
+
+        $vacancies = $vacancyQuery->orderByDesc('posted_date')->paginate(10)->withQueryString();
+        $departments = $isHr ? Department::orderBy('name')->get() : collect();
+
+        $employee = $user->employee;
+        $appliedVacancyIds = $employee
+            ? Applicant::where('employee_id', $employee->id)->pluck('job_vacancy_id')->all()
+            : [];
+
+        return view('recruitment.vacancies', compact('vacancies', 'departments', 'isHr', 'appliedVacancyIds', 'employee'));
+    }
+
+    /**
+     * Existing employees can apply directly to an open internal vacancy.
+     * The existing employee record is reused, so the applicant is linked
+     * back to the employee without duplicating personal information.
+     */
+    public function applyToVacancy(JobVacancy $vacancy)
+    {
+        $user = auth()->user();
+        $employee = $user->employee;
+
+        if (! $employee) {
+            return back()->with('success', 'Your account is not linked to an employee record yet. Contact HR before applying.');
+        }
+
+        if ($vacancy->status !== 'open' || ($vacancy->closing_date && $vacancy->closing_date->isBefore(today()))) {
+            return back()->with('success', 'This vacancy is no longer accepting applications.');
+        }
+
+        if (Applicant::where('employee_id', $employee->id)->where('job_vacancy_id', $vacancy->id)->exists()) {
+            return back()->with('success', 'You have already applied for this vacancy.');
+        }
+
+        Applicant::create([
+            'job_vacancy_id' => $vacancy->id,
+            'employee_id' => $employee->id,
+            'first_name' => $employee->first_name,
+            'last_name' => $employee->last_name,
+            'email' => $employee->email,
+            'phone' => $employee->phone_number,
+            'date_of_birth' => $employee->date_of_birth,
+            'gender' => $employee->gender,
+            'status' => 'applied',
+            'applied_at' => today(),
+        ]);
+
+        return back()->with('success', "Your application for {$vacancy->title} has been submitted.");
     }
 
     public function storeVacancy(Request $request)

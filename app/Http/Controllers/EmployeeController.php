@@ -294,6 +294,36 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Self-service: an employee chooses how future payroll payouts should be made.
+     * Check is the default when no preference has been saved.
+     */
+    public function updatePaymentPreferences(Request $request)
+    {
+        $employee = auth()->user()->employee;
+
+        if (! $employee) {
+            abort(404, 'No employee record is linked to your account yet. Contact HR.');
+        }
+
+        $validated = $request->validate([
+            'payment_method' => 'required|in:Check,Bank Transfer,Cash',
+            'bank_name' => 'nullable|required_if:payment_method,Bank Transfer|string|max:255',
+            'bank_account_name' => 'nullable|required_if:payment_method,Bank Transfer|string|max:255',
+            'bank_account_number' => 'nullable|required_if:payment_method,Bank Transfer|string|max:100',
+        ]);
+
+        if ($validated['payment_method'] !== 'Bank Transfer') {
+            $validated['bank_name'] = null;
+            $validated['bank_account_name'] = null;
+            $validated['bank_account_number'] = null;
+        }
+
+        $employee->update($validated);
+
+        return back()->with('success', 'Payment preferences updated successfully.');
+    }
+
+    /**
      * Self-service: an employee viewing their OWN profile (read-only).
      */
     public function myProfile()

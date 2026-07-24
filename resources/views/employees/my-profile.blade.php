@@ -5,6 +5,55 @@
     <a href="{{ route('dashboard') }}" class="hover:text-gray-600">Home</a>
     <span class="mx-1">/</span>
     <span class="text-gray-600">My Profile</span>
+
+    <div class="bg-white border rounded-lg p-6 mt-6">
+        <h2 class="font-semibold text-gray-900 mb-1">Payment Preferences</h2>
+        <p class="text-sm text-gray-500 mb-4">Choose how you would like to receive future payroll payouts. Check is the default method.</p>
+
+        <form action="{{ route('my.profile.payment-preferences') }}" method="POST" class="space-y-4 max-w-2xl">
+            @csrf
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Preferred Payment Method</label>
+                <select name="payment_method" id="payment_method" required class="border rounded-md px-3 py-2 text-sm w-full sm:w-80" onchange="toggleBankFields()">
+                    <option value="Check" @selected(($employee->payment_method ?? 'Check') === 'Check')>Check</option>
+                    <option value="Bank Transfer" @selected(($employee->payment_method ?? 'Check') === 'Bank Transfer')>Bank Transfer</option>
+                    <option value="Cash" @selected(($employee->payment_method ?? 'Check') === 'Cash')>Cash</option>
+                </select>
+            </div>
+
+            <div id="bank-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-3 {{ ($employee->payment_method ?? 'Check') === 'Bank Transfer' ? '' : 'hidden' }}">
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ old('bank_name', $employee->bank_name) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Account Name</label>
+                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $employee->bank_account_name) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Account Number</label>
+                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+            </div>
+
+            @error('payment_method') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_name') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_account_name') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_account_number') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                Save Payment Preferences
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function toggleBankFields() {
+            const method = document.getElementById('payment_method').value;
+            document.getElementById('bank-fields').classList.toggle('hidden', method !== 'Bank Transfer');
+        }
+    </script>
+
 @endsection
 
 @section('content')
@@ -130,4 +179,53 @@
             </button>
         </form>
     </div>
+
+    <div class="bg-white border rounded-lg p-6 mt-6">
+        <h2 class="font-semibold text-gray-900 mb-1">Payment Preferences</h2>
+        <p class="text-sm text-gray-500 mb-4">Choose how you would like to receive future payroll payouts. Check is the default method.</p>
+
+        <form action="{{ route('my.profile.payment-preferences') }}" method="POST" class="space-y-4 max-w-2xl">
+            @csrf
+            <div>
+                <label class="text-xs text-gray-500 block mb-1">Preferred Payment Method</label>
+                <select name="payment_method" id="payment_method" required class="border rounded-md px-3 py-2 text-sm w-full sm:w-80" onchange="toggleBankFields()">
+                    <option value="Check" @selected(($employee->payment_method ?? 'Check') === 'Check')>Check</option>
+                    <option value="Bank Transfer" @selected(($employee->payment_method ?? 'Check') === 'Bank Transfer')>Bank Transfer</option>
+                    <option value="Cash" @selected(($employee->payment_method ?? 'Check') === 'Cash')>Cash</option>
+                </select>
+            </div>
+
+            <div id="bank-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-3 {{ ($employee->payment_method ?? 'Check') === 'Bank Transfer' ? '' : 'hidden' }}">
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ old('bank_name', $employee->bank_name) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Account Name</label>
+                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $employee->bank_account_name) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Account Number</label>
+                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number) }}" class="border rounded-md px-3 py-2 text-sm w-full">
+                </div>
+            </div>
+
+            @error('payment_method') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_name') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_account_name') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+            @error('bank_account_number') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md">
+                Save Payment Preferences
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function toggleBankFields() {
+            const method = document.getElementById('payment_method').value;
+            document.getElementById('bank-fields').classList.toggle('hidden', method !== 'Bank Transfer');
+        }
+    </script>
+
 @endsection

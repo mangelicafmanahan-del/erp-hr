@@ -101,6 +101,10 @@
                    class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('attendance.leave') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
                     Leave Requests
                 </a>
+                <a href="{{ route('recruitment.vacancies') }}"
+                   class="flex items-center gap-2 px-3 py-2 rounded-md {{ request()->routeIs('recruitment.vacancies') ? 'bg-slate-700 text-white' : 'hover:bg-slate-800' }}">
+                    Job Opportunities
+                </a>
             @endif
         </nav>
 
