@@ -469,6 +469,56 @@ class RecruitmentController extends Controller
                 'status' => $status === 'accepted' ? 'hired' : 'rejected',
             ]);
 
+            if ($status === 'accepted') {
+                $applicant = $lockedOffer->applicant;
+                $employee->loadMissing('department');
+
+                // Internal applicants already have an Employee record.
+                // Accepting the offer therefore updates the employee's current
+                // position and department while preserving the previous role
+                // in employment history.
+                $previousPosition = $employee->job_title;
+                $previousDepartmentId = $employee->department_id;
+
+                if (
+                    $previousPosition ||
+                    $previousDepartmentId ||
+                    $employee->hire_date
+                ) {
+                    $currentHistory = $employee->employmentHistory()
+                        ->whereNull('end_date')
+                        ->orderByDesc('start_date')
+                        ->first();
+
+                    if ($currentHistory) {
+                        $currentHistory->update([
+                            'end_date' => today(),
+                        ]);
+                    }
+                }
+
+                $newPosition = $lockedOffer->offered_position ?: $applicant->jobVacancy->title;
+                $newDepartmentId = $applicant->jobVacancy->department_id;
+                $newContractType = $lockedOffer->employment_type ?: $employee->contract_type;
+                $newStartDate = $lockedOffer->start_date ?: today();
+
+                $employee->update([
+                    'job_title' => $newPosition,
+                    'department_id' => $newDepartmentId,
+                    'contract_type' => $newContractType,
+                    'hire_date' => $employee->hire_date ?: $newStartDate,
+                ]);
+
+                $employee->employmentHistory()->create([
+                    'company_name' => config('app.name', 'This company'),
+                    'position' => $newPosition,
+                    'department_id' => $newDepartmentId,
+                    'start_date' => $newStartDate,
+                    'end_date' => null,
+                    'change_reason' => 'Internal transfer/promotion after accepting job offer',
+                ]);
+            }
+
             if ($status === 'accepted' && $lockedOffer->applicant->onboardingTasks()->count() === 0) {
                 $defaultTasks = [
                     'Offer accepted by candidate',
