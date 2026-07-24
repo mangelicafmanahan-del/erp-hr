@@ -471,51 +471,45 @@ class RecruitmentController extends Controller
 
             if ($status === 'accepted') {
                 $applicant = $lockedOffer->applicant;
-                $employee->loadMissing('department');
+                $effectiveDate = $lockedOffer->start_date ?? today();
 
-                // Internal applicants already have an Employee record.
-                // Accepting the offer therefore updates the employee's current
-                // position and department while preserving the previous role
-                // in employment history.
-                $previousPosition = $employee->job_title;
-                $previousDepartmentId = $employee->department_id;
-
-                if (
-                    $previousPosition ||
-                    $previousDepartmentId ||
-                    $employee->hire_date
-                ) {
-                    $currentHistory = $employee->employmentHistory()
-                        ->whereNull('end_date')
-                        ->orderByDesc('start_date')
-                        ->first();
-
-                    if ($currentHistory) {
-                        $currentHistory->update([
-                            'end_date' => today(),
-                        ]);
-                    }
-                }
-
-                $newPosition = $lockedOffer->offered_position ?: $applicant->jobVacancy->title;
-                $newDepartmentId = $applicant->jobVacancy->department_id;
-                $newContractType = $lockedOffer->employment_type ?: $employee->contract_type;
-                $newStartDate = $lockedOffer->start_date ?: today();
-
+                // Existing employee applicants are transferred/promoted into
+                // the position they accepted, and their new salary becomes
+                // effective on the offer start date (or today if none was set).
                 $employee->update([
-                    'job_title' => $newPosition,
-                    'department_id' => $newDepartmentId,
-                    'contract_type' => $newContractType,
-                    'hire_date' => $employee->hire_date ?: $newStartDate,
+                    'job_title' => $lockedOffer->offered_position
+                        ?: $applicant->jobVacancy?->title
+                        ?: $employee->job_title,
+                    'department_id' => $applicant->jobVacancy?->department_id
+                        ?: $employee->department_id,
                 ]);
+
+                $currentHistory = $employee->employmentHistory()
+                    ->whereNull('end_date')
+                    ->orderByDesc('start_date')
+                    ->first();
+
+                if ($currentHistory) {
+                    $currentHistory->update([
+                        'end_date' => $effectiveDate->copy()->subDay(),
+                    ]);
+                }
 
                 $employee->employmentHistory()->create([
                     'company_name' => config('app.name', 'This company'),
-                    'position' => $newPosition,
-                    'department_id' => $newDepartmentId,
-                    'start_date' => $newStartDate,
-                    'end_date' => null,
-                    'change_reason' => 'Internal transfer/promotion after accepting job offer',
+                    'position' => $employee->job_title,
+                    'department_id' => $employee->department_id,
+                    'start_date' => $effectiveDate,
+                    'change_reason' => 'Accepted internal job offer',
+                ]);
+
+                // SalaryStructure is the source used by payroll for the
+                // employee's current salary. Create a new effective salary
+                // record rather than overwriting the previous salary history.
+                $employee->salaryStructures()->create([
+                    'basic_salary' => $lockedOffer->salary_offered,
+                    'allowance' => 0,
+                    'effective_date' => $effectiveDate,
                 ]);
             }
 
